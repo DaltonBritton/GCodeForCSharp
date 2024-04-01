@@ -4,6 +4,7 @@ namespace GCodeParser.Commands;
 
 public partial class EmptyCommand(string comment = "") : Command(comment)
 {
+    /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor)
     {
         return AddInlineComment("");

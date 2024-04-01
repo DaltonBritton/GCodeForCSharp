@@ -12,6 +12,13 @@ public abstract class Command
 
     public string InlineComment { get; }
 
+    /// <summary>
+    /// Gets a string representing the command as gcode.
+    /// Return an empty string if command should be omitted from gcode.
+    /// </summary>
+    /// <param name="state">The current state of the printer. The state should be updated to reflect changes to the printer state after this command is executed.</param>
+    /// <param name="gcodeFlavor">The flavor of gcode to output.</param>
+    /// <returns>A string representing the command as gcode.</returns>
     public abstract string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor);
 
     protected abstract void ApplyToState(PrinterState state);

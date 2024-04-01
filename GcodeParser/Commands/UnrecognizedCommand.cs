@@ -2,6 +2,8 @@
 
 public class UnrecognizedCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor) : Command(command)
 {
+    
+    /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gCodeFlavor)
     {
         return command;

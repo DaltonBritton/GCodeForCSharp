@@ -46,6 +46,7 @@ public partial class LinearMoveCommand : Command
         GetNewPositions(printerState);
     }
 
+    /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor)
     {
         if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
@@ -82,6 +83,7 @@ public partial class LinearMoveCommand : Command
         printerState.F = _f;
     }
 
+    
     public static bool IsCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
