@@ -70,7 +70,7 @@ public partial class LinearMoveCommand : Command
         if (commandString == "G0")
             return string.Empty;
 
-        return builder.ToString();
+        return commandString;
     }
 
     protected override void ApplyToState(PrinterState printerState)

@@ -182,22 +182,29 @@ public class LinearMoveTests
     {
         MemoryStream memoryStream = new MemoryStream();
 
-        GCodeStreamWriter gcodeWriter = new(memoryStream);
+        await using GCodeStreamWriter gcodeWriter = new(memoryStream);
 
-        await foreach (Command command in gcodeFile)
-        {
-            await gcodeWriter.SaveCommandAsync(command);
-        }
+        await gcodeWriter.SaveCommandsAsync(gcodeFile);
 
+        await gcodeWriter.FlushAsync();
+        memoryStream.Position = 0;
 
-        StreamReader reader = new(memoryStream);
+        
+        using StreamReader reader = new(memoryStream);
 
         using IEnumerator<string> expectedCommandsIterator = expectedCommands.GetEnumerator();
-        while (!reader.EndOfStream || expectedCommandsIterator.MoveNext())
+
+        
+        string? gcodeLine = await reader.ReadLineAsync();
+        while (gcodeLine != null && expectedCommandsIterator.MoveNext())
         {
-            string gcodeLine = await reader.ReadLineAsync();
             string expectedLine = expectedCommandsIterator.Current;
             Assert.AreEqual(expectedLine, gcodeLine);
+            
+            gcodeLine = await reader.ReadLineAsync();
         }
+
+        Assert.IsNull(gcodeLine);
+        Assert.IsFalse(expectedCommandsIterator.MoveNext());
     }
 }

@@ -9,6 +9,55 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
 
     private readonly PrinterState _printerState = new();
 
+    public void SaveCommand(Command command)
+    {
+        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        
+        if(gcodeLine != string.Empty)
+            _backingStream.WriteLine(gcodeLine);
+    }
+
+    public async ValueTask SaveCommandAsync(Command command)
+    {
+        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        
+        if(gcodeLine != string.Empty)
+            await _backingStream.WriteLineAsync(gcodeLine);
+    }
+
+    public void SaveCommands(IEnumerable<Command> commands)
+    {
+        foreach (var command in commands)
+        {
+            SaveCommand(command);
+        }
+    }
+
+    public async ValueTask SaveCommandsAsync(IEnumerable<Command> commands)
+    {
+        foreach (var command in commands)
+        {
+            await SaveCommandAsync(command);
+        }
+    }
+
+    public async ValueTask SaveCommandsAsync(IAsyncEnumerable<Command> commands)
+    {
+        await foreach (Command command in commands)
+        {
+            await SaveCommandAsync(command);
+        }
+    }
+
+    public void Flush()
+    {
+        _backingStream.Flush();
+    }
+    public async Task FlushAsync()
+    {
+        await _backingStream.FlushAsync();
+    }
+    
     public async ValueTask DisposeAsync()
     {
         await _backingStream.DisposeAsync();
@@ -20,38 +69,5 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
         _backingStream.Dispose();
         outputStream.Dispose();
     }
-
-    public void SaveCommand(Command command)
-    {
-        _backingStream.WriteLine(command.ToGCode(_printerState, gcodeFlavor));
-    }
-
-    public async ValueTask SaveCommandAsync(Command command)
-    {
-        await _backingStream.WriteLineAsync(command.ToGCode(_printerState, gcodeFlavor));
-    }
-
-    public void SaveCommands(IEnumerable<Command> commands)
-    {
-        foreach (var command in commands)
-        {
-            _backingStream.WriteLine(command.ToGCode(_printerState, gcodeFlavor));
-        }
-    }
-
-    public async ValueTask SaveCommandsAsync(IEnumerable<Command> commands)
-    {
-        foreach (var command in commands)
-        {
-            await _backingStream.WriteLineAsync(command.ToGCode(_printerState, gcodeFlavor));
-        }
-    }
-
-    public async ValueTask SaveCommandsAsync(IAsyncEnumerable<Command> commands)
-    {
-        await foreach (Command command in commands)
-        {
-            await _backingStream.WriteLineAsync(command.ToGCode(_printerState, gcodeFlavor));
-        }
-    }
+    
 }
