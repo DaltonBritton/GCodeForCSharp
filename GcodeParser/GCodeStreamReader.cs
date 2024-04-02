@@ -1,10 +1,16 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using GCodeParser.Commands;
 
 namespace GCodeParser;
 
+/// <summary>
+/// Reads GCode from an <paramref name="inputStream"/>.
+/// </summary>
+/// <param name="inputStream">The stream to read from</param>
+/// <param name="gcodeFlavor">The expected flavor of the gcode.</param>
 public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFlavor = GCodeFile.GCodeFlavor.Marlin)
-    : IDisposable, IAsyncDisposable, IAsyncEnumerable<Command>
+    : IDisposable, IAsyncDisposable, IEnumerable<Command>, IAsyncEnumerable<Command>
 {
     
     /// <summary>
@@ -22,14 +28,53 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
 
     private readonly PrinterState _printerState = new();
     private readonly List<CustomCommandGenerator> _customCommandGenerators = new();
-    
-    public ValueTask DisposeAsync()
+
+
+    /// <summary>
+    /// Reads the next command in the GCode File.
+    /// </summary>
+    /// <returns>A Command representing the next command in a file, null if end of file is reached</returns>
+    public Command? ReadNextCommand()
     {
-        _backingStream.Dispose();
-        inputStream.Dispose();
-        return ValueTask.CompletedTask;
+        string? line = _backingStream.ReadLine();
+        if (line == null)
+            return null;
+
+        Command command = ReadLine(_printerState, line);
+
+        return command;
     }
 
+    /// <inheritdoc cref="ReadNextCommand"/>
+    public async Task<Command?> ReadNextCommandAsync()
+    {
+        string? line = await _backingStream.ReadLineAsync();
+        if (line == null)
+            return null;
+
+        Command command = ReadLine(_printerState, line);
+
+        return command;
+    }
+    
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+    
+    /// <inheritdoc />
+    public IEnumerator<Command> GetEnumerator()
+    {
+        Command? command = ReadNextCommand();
+        while (command != null)
+        {
+            yield return command;
+            
+            command = ReadNextCommand();
+        }
+    }
+
+    /// <inheritdoc />
     public async IAsyncEnumerator<Command> GetAsyncEnumerator(
         CancellationToken cancellationToken = default)
     {
@@ -42,34 +87,30 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
         }
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _backingStream.Dispose();
         inputStream.Dispose();
     }
-
-    public Command? ReadNextCommand()
+    /// <inheritdoc />
+    public ValueTask DisposeAsync()
     {
-        string? line = _backingStream.ReadLine();
-        if (line == null)
-            return null;
-
-        Command command = ReadLine(_printerState, line);
-
-        return command;
+        _backingStream.Dispose();
+        inputStream.Dispose();
+        return ValueTask.CompletedTask;
     }
 
-    public async Task<Command?> ReadNextCommandAsync()
-    {
-        string? line = await _backingStream.ReadLineAsync();
-        if (line == null)
-            return null;
-
-        Command command = ReadLine(_printerState, line);
-
-        return command;
-    }
-    
+    /// <summary>
+    /// Injects a GCode Parser into the parsing tree.
+    /// <para>
+    /// Used to Parse Commands unique to a specific printer or to Parse Slicer Generated Comments such as line type changes, or layer changes.
+    /// </para>
+    /// <para>
+    /// CustomCommandGenerators are called in the order they were added before any internal CommandGenerators are called, for each line in the GCodeFile.
+    /// </para>
+    /// </summary>
+    /// <param name="customCommandGenerator">A Command Generator used to parse commands in a GCode File.</param>
     public void AddCustomGCodeParser(CustomCommandGenerator customCommandGenerator)
     {
         _customCommandGenerators.Add(customCommandGenerator);
