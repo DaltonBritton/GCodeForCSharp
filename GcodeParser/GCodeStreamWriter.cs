@@ -2,6 +2,11 @@
 
 namespace GCodeParser;
 
+/// <summary>
+/// Writes GCode commands to an output stream.
+/// </summary>
+/// <param name="outputStream">The stream to write to.</param>
+/// <param name="gcodeFlavor">The flavor of gcode to write commands as.</param>
 public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeFlavor = GCodeFile.GCodeFlavor.Marlin)
     : IDisposable, IAsyncDisposable
 {
@@ -9,6 +14,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
 
     private readonly PrinterState _printerState = new();
 
+    /// <summary>
+    /// Saves a command to the output stream.
+    /// </summary>
+    /// <param name="command">The command to save.</param>
     public void SaveCommand(Command command)
     {
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
@@ -17,6 +26,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
             _backingStream.WriteLine(gcodeLine);
     }
 
+    /// <summary>
+    /// Saves a command to the output stream Asynchronously.
+    /// </summary>
+    /// <param name="command">The command to save.</param>
     public async ValueTask SaveCommandAsync(Command command)
     {
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
@@ -25,6 +38,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
             await _backingStream.WriteLineAsync(gcodeLine);
     }
 
+    /// <summary>
+    /// Saves all commands within the IEnumerable to the output stream.
+    /// </summary>
+    /// <param name="commands">A List of commands to save to the output stream</param>
     public void SaveCommands(IEnumerable<Command> commands)
     {
         foreach (var command in commands)
@@ -33,6 +50,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
         }
     }
 
+    /// <summary>
+    /// Saves all commands within the IEnumerable to the output stream Asynchronously.
+    /// </summary>
+    /// <param name="commands">A List of commands to save to the output stream</param>
     public async ValueTask SaveCommandsAsync(IEnumerable<Command> commands)
     {
         foreach (var command in commands)
@@ -41,6 +62,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
         }
     }
 
+    /// <inheritdoc cref="SaveCommandsAsync(System.Collections.Generic.IEnumerable{GCodeParser.Commands.Command})"/>
     public async ValueTask SaveCommandsAsync(IAsyncEnumerable<Command> commands)
     {
         await foreach (Command command in commands)
@@ -49,25 +71,33 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeF
         }
     }
 
+    /// <summary>
+    /// Writes all buffered commands to the output stream, before clearing the buffer.
+    /// </summary>
     public void Flush()
     {
         _backingStream.Flush();
     }
+    
+    /// <inheritdoc cref="Flush"/>
     public async Task FlushAsync()
     {
         await _backingStream.FlushAsync();
     }
-    
-    public async ValueTask DisposeAsync()
-    {
-        await _backingStream.DisposeAsync();
-        await outputStream.DisposeAsync();
-    }
 
+
+    /// <inheritdoc />
     public void Dispose()
     {
         _backingStream.Dispose();
         outputStream.Dispose();
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await _backingStream.DisposeAsync();
+        await outputStream.DisposeAsync();
     }
     
 }
