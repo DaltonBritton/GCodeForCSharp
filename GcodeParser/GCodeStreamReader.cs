@@ -22,10 +22,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
 
     private readonly PrinterState _printerState = new();
     private readonly List<CustomCommandGenerator> _customCommandGenerators = new();
-
-
-    public bool HasNextCommand => !_backingStream.EndOfStream;
-
+    
     public ValueTask DisposeAsync()
     {
         _backingStream.Dispose();
@@ -34,11 +31,14 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
     }
 
     public async IAsyncEnumerator<Command> GetAsyncEnumerator(
-        CancellationToken cancellationToken = new CancellationToken())
+        CancellationToken cancellationToken = default)
     {
-        while (HasNextCommand)
+        Command? command = await ReadNextCommandAsync();
+        while (command != null)
         {
-            yield return await ReadNextCommandAsync();
+            yield return command;
+            
+            command = await ReadNextCommandAsync();
         }
     }
 
@@ -48,22 +48,22 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
         inputStream.Dispose();
     }
 
-    public Command ReadNextCommand()
+    public Command? ReadNextCommand()
     {
         string? line = _backingStream.ReadLine();
         if (line == null)
-            throw new Exception("Reached end of stream, no more commands exist");
+            return null;
 
         Command command = ReadLine(_printerState, line);
 
         return command;
     }
 
-    public async Task<Command> ReadNextCommandAsync()
+    public async Task<Command?> ReadNextCommandAsync()
     {
         string? line = await _backingStream.ReadLineAsync();
         if (line == null)
-            throw new Exception("Reached end of stream, no more commands exist");
+            return null;
 
         Command command = ReadLine(_printerState, line);
 
