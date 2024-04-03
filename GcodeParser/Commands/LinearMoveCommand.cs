@@ -12,7 +12,7 @@ public partial class LinearMoveCommand : Command
     private double _y;
     private double _z;
 
-    public LinearMoveCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState state) : base(command)
+    public LinearMoveCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
     {
         switch (gcodeFlavor)
         {
@@ -26,7 +26,7 @@ public partial class LinearMoveCommand : Command
     }
 
     public LinearMoveCommand(PrinterState printerState, double? x = null, double? y = null, double? z = null,
-        double? e = null, double? f = null) : base("")
+        double? e = null, double? f = null)
     {
         if (x != null)
             printerState.X = (double)x;

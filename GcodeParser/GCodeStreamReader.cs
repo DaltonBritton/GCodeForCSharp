@@ -127,7 +127,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
             return new LinearMoveCommand(line, gcodeFlavor, printerState);
 
         if (AbsMovementMode.IsCommand(line, gcodeFlavor))
-            return new AbsMovementMode(line, printerState);
+            return new AbsMovementMode(line, gcodeFlavor, printerState);
 
         if (EmptyCommand.IsCommand(line, gcodeFlavor))
             return new EmptyCommand(line);

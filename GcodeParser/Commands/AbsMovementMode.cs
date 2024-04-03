@@ -6,7 +6,7 @@ public sealed partial class AbsMovementMode : Command
 {
     private readonly bool _isAbs;
 
-    public AbsMovementMode(string command, PrinterState printerState) : base(command)
+    public AbsMovementMode(string command, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState printerState) : base(command, gcodeFlavor)
     {
         if (Regex.IsMatch(command, "^G90"))
             _isAbs = true;

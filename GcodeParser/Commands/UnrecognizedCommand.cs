@@ -1,6 +1,6 @@
 ﻿namespace GCodeParser.Commands;
 
-public class UnrecognizedCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor) : Command(command)
+public class UnrecognizedCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
 {
     
     /// <inheritdoc />

@@ -1,15 +1,45 @@
 ﻿namespace GCodeParser.Commands;
 
+/// <summary>
+/// An Exception representing an error when reading or saving GCode.
+/// </summary>
+/// <param name="message">The message to be displayed when thrown</param>
 public class InvalidGCode(string message) : Exception(message);
 
+/// <summary>
+/// Base class for all gcode commands.
+/// Represents a single line of gcode or a single gcode command
+/// </summary>
 public abstract class Command
 {
-    protected Command(string command)
+    /// <summary>
+    /// Constructs a new Command.
+    /// </summary>
+    protected Command()
     {
+        InlineComment = string.Empty;
+    }
+
+
+    /// <summary>
+    /// Constructs a new Command and extracts any inline comments that exist on the same line according to the <paramref name="gcodeFlavor"/>.
+    /// </summary>
+    /// <param name="command">A single line of gcode, used to extract comments.</param>
+    /// <param name="gcodeFlavor">Dictates the syntax used to extract any inline comments.</param>
+    protected Command(string command, GCodeFile.GCodeFlavor gcodeFlavor)
+    {
+        if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
+            throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
+        
         int commaLocation = command.IndexOf(';');
         InlineComment = (commaLocation != -1) ? command.Substring(commaLocation + 1) : string.Empty;
     }
+    
 
+
+    /// <summary>
+    /// Gets the inline comment contained within the line.
+    /// </summary>
     public string InlineComment { get; }
 
     /// <summary>
@@ -21,8 +51,19 @@ public abstract class Command
     /// <returns>A string representing the command as gcode.</returns>
     public abstract string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor);
 
+    /// <summary>
+    /// Applies all changes to the printer state executing this command may produce.
+    /// </summary>
+    /// <param name="state">The printer state before this command has been executed.</param>
     protected abstract void ApplyToState(PrinterState state);
 
+    /// <summary>
+    /// Adds an inline comment with the appropriate syntax as required by the <paramref name="gcodeFlavor"/>.
+    /// </summary>
+    /// <param name="command">A string representation of a command to which the comment will be added.</param>
+    /// <param name="gcodeFlavor">Dictates the syntax for the comment to be applied.</param>
+    /// <returns>A string containing an inline comment(if exists) and the original <paramref name="command"/></returns>
+    /// <exception cref="InvalidGCode">Thrown in the event a gcode flavor isn't supported.</exception>
     protected string AddInlineComment(string command, GCodeFile.GCodeFlavor gcodeFlavor)
     {
         if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
