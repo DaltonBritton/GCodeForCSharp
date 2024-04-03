@@ -23,8 +23,11 @@ public abstract class Command
 
     protected abstract void ApplyToState(PrinterState state);
 
-    protected string AddInlineComment(string command)
+    protected string AddInlineComment(string command, GCodeFile.GCodeFlavor gcodeFlavor)
     {
+        if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
+            throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
+        
         return InlineComment != string.Empty ? $"{command};{InlineComment}" : command;
     }
 }

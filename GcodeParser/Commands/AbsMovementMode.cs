@@ -21,7 +21,7 @@ public sealed partial class AbsMovementMode : Command
     /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor)
     {
-        return string.Empty;
+        return AddInlineComment(string.Empty, gcodeFlavor);
     }
 
     protected override void ApplyToState(PrinterState state)

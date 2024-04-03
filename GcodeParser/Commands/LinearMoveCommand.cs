@@ -64,12 +64,11 @@ public partial class LinearMoveCommand : Command
 
         ApplyToState(state);
 
-        if (InlineComment != string.Empty)
-            builder.Append($";{InlineComment}");
-
         string commandString = builder.ToString();
         if (commandString == "G0")
             return string.Empty;
+
+        commandString = AddInlineComment(commandString, gcodeFlavor);
 
         return commandString;
     }
