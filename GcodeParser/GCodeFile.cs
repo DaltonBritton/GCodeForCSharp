@@ -5,11 +5,6 @@ namespace GCodeParser;
 
 public static class GCodeFile
 {
-    public enum GCodeFlavor
-    {
-        Marlin,
-    }
-
     public static async Task<IEnumerable<Command>> ReadGCode(Stream inputStream,
         GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
     {

@@ -1,10 +1,10 @@
 ﻿namespace GCodeParser.Commands;
 
-public class UnrecognizedCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
+public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
 {
     
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gCodeFlavor)
+    public override string ToGCode(PrinterState state, GCodeFlavor gCodeFlavor)
     {
         return command;
     }

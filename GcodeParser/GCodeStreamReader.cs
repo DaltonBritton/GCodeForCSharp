@@ -9,7 +9,7 @@ namespace GCodeParser;
 /// </summary>
 /// <param name="inputStream">The stream to read from</param>
 /// <param name="gcodeFlavor">The expected flavor of the gcode.</param>
-public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFlavor = GCodeFile.GCodeFlavor.Marlin)
+public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
     : IDisposable, IAsyncDisposable, IEnumerable<Command>, IAsyncEnumerable<Command>
 {
     
@@ -22,7 +22,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFile.GCodeFlavor gcodeFl
     /// Null if no command was recognized.
     /// </param>
     /// <returns>True if the command was recognized, false if otherwise.</returns>
-    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState printerState, [NotNullWhen(true)] out Command? command);
+    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, PrinterState printerState, [NotNullWhen(true)] out Command? command);
     
     private readonly StreamReader _backingStream = new(inputStream);
 

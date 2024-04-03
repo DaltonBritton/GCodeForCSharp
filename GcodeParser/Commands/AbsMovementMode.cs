@@ -6,7 +6,7 @@ public sealed partial class AbsMovementMode : Command
 {
     private readonly bool _isAbs;
 
-    public AbsMovementMode(string command, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState printerState) : base(command, gcodeFlavor)
+    public AbsMovementMode(string command, GCodeFlavor gcodeFlavor, PrinterState printerState) : base(command, gcodeFlavor)
     {
         if (Regex.IsMatch(command, "^G90"))
             _isAbs = true;
@@ -19,7 +19,7 @@ public sealed partial class AbsMovementMode : Command
     }
 
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor)
+    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
     {
         return AddInlineComment(string.Empty, gcodeFlavor);
     }
@@ -29,11 +29,11 @@ public sealed partial class AbsMovementMode : Command
         state.AbsMode = _isAbs;
     }
 
-    public static bool IsCommand(string line, GCodeFile.GCodeFlavor gcodeFlavor)
+    public static bool IsCommand(string line, GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
         {
-            (GCodeFile.GCodeFlavor.Marlin) => SettingAbsModeCommandRegex().IsMatch(line),
+            (GCodeFlavor.Marlin) => SettingAbsModeCommandRegex().IsMatch(line),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }

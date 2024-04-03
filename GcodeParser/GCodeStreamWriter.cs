@@ -7,7 +7,7 @@ namespace GCodeParser;
 /// </summary>
 /// <param name="outputStream">The stream to write to.</param>
 /// <param name="gcodeFlavor">The flavor of gcode to write commands as.</param>
-public class GCodeStreamWriter(Stream outputStream, GCodeFile.GCodeFlavor gcodeFlavor = GCodeFile.GCodeFlavor.Marlin)
+public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
     : IDisposable, IAsyncDisposable
 {
     private readonly StreamWriter _backingStream = new(outputStream);

@@ -24,7 +24,7 @@ public class LinearMoveTests
         PrinterState printerState = new();
 
         Assert.AreEqual(1, commands.Count);
-        Assert.AreEqual("G0 X5", commands[0].ToGCode(printerState, GCodeFile.GCodeFlavor.Marlin));
+        Assert.AreEqual("G0 X5", commands[0].ToGCode(printerState, GCodeFlavor.Marlin));
     }
 
     [TestMethod]

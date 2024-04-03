@@ -12,11 +12,11 @@ public partial class LinearMoveCommand : Command
     private double _y;
     private double _z;
 
-    public LinearMoveCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
+    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
     {
         switch (gcodeFlavor)
         {
-            case (GCodeFile.GCodeFlavor.Marlin):
+            case (GCodeFlavor.Marlin):
                 ParseMarlin(command, state);
                 break;
             default:
@@ -47,9 +47,9 @@ public partial class LinearMoveCommand : Command
     }
 
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor)
+    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
     {
-        if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
+        if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
 
         string gcode = Math.Abs(_e - state.E) > 0.00001 ? "G1" : "G0";
@@ -83,11 +83,11 @@ public partial class LinearMoveCommand : Command
     }
 
     
-    public static bool IsCommand(string command, GCodeFile.GCodeFlavor gcodeFlavor)
+    public static bool IsCommand(string command, GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
         {
-            (GCodeFile.GCodeFlavor.Marlin) => MarlinLinearMoveCommand().IsMatch(command),
+            (GCodeFlavor.Marlin) => MarlinLinearMoveCommand().IsMatch(command),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }

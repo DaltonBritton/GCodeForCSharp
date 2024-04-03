@@ -26,9 +26,9 @@ public abstract class Command
     /// </summary>
     /// <param name="command">A single line of gcode, used to extract comments.</param>
     /// <param name="gcodeFlavor">Dictates the syntax used to extract any inline comments.</param>
-    protected Command(string command, GCodeFile.GCodeFlavor gcodeFlavor)
+    protected Command(string command, GCodeFlavor gcodeFlavor)
     {
-        if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
+        if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
         
         int commaLocation = command.IndexOf(';');
@@ -49,7 +49,7 @@ public abstract class Command
     /// <param name="state">The current state of the printer. The state should be updated to reflect changes to the printer state after this command is executed.</param>
     /// <param name="gcodeFlavor">The flavor of gcode to output.</param>
     /// <returns>A string representing the command as gcode.</returns>
-    public abstract string ToGCode(PrinterState state, GCodeFile.GCodeFlavor gcodeFlavor);
+    public abstract string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor);
 
     /// <summary>
     /// Applies all changes to the printer state executing this command may produce.
@@ -64,9 +64,9 @@ public abstract class Command
     /// <param name="gcodeFlavor">Dictates the syntax for the comment to be applied.</param>
     /// <returns>A string containing an inline comment(if exists) and the original <paramref name="command"/></returns>
     /// <exception cref="InvalidGCode">Thrown in the event a gcode flavor isn't supported.</exception>
-    protected string AddInlineComment(string command, GCodeFile.GCodeFlavor gcodeFlavor)
+    protected string AddInlineComment(string command, GCodeFlavor gcodeFlavor)
     {
-        if (gcodeFlavor != GCodeFile.GCodeFlavor.Marlin)
+        if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
         
         return InlineComment != string.Empty ? $"{command};{InlineComment}" : command;
