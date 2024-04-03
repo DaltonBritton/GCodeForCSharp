@@ -35,7 +35,7 @@ public class LinearMoveTests
         await using GCodeStreamReader gcodeReader = new GCodeStreamReader(inputStream);
         string[] expectedCommands = ["G0 X5", "G0 X10"]; // G1 Converted to G0 bc no filament was extruded
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -49,7 +49,7 @@ public class LinearMoveTests
         // Relative command gets removed and replaced with abs pos movements
         string[] expectedCommands = ["G0 X10"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -62,7 +62,7 @@ public class LinearMoveTests
         // Relative command gets removed and replaced with abs pos movements
         string[] expectedCommands = ["G0 X10", "G0 X20"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -75,7 +75,7 @@ public class LinearMoveTests
         // Relative command gets removed and replaced with abs pos movements
         string[] expectedCommands = ["G0 X10", "G0 X5"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -87,7 +87,7 @@ public class LinearMoveTests
 
         string[] expectedCommands = ["G1 X10 E10", "G1 X15 E-5"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -100,7 +100,7 @@ public class LinearMoveTests
         // E is exported relative
         string[] expectedCommands = ["G1 X10 E10", "G1 X5 E5"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -114,7 +114,7 @@ public class LinearMoveTests
         // Second command gets removed because no movement is preformed
         string[] expectedCommands = ["G1 X10 Y10 Z10 E5"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -129,7 +129,7 @@ public class LinearMoveTests
         // Second command gets removed because no movement is preformed
         string[] expectedCommands = ["G1 X10 Y10 Z10 E5"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -143,7 +143,7 @@ public class LinearMoveTests
         // Second command gets removed because no movement is preformed
         string[] expectedCommands = ["G1 X10 Y10 Z10 E5", "G0 X5 Z15"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -157,7 +157,7 @@ public class LinearMoveTests
         // Second command gets removed because no movement is preformed
         string[] expectedCommands = ["G1 X10 Y10 Z10 E5", "G0 X15 Z25"];
 
-        await AssertCommandsEqual(gcodeReader, expectedCommands);
+        await Helpers.AssertCommandsEqual(gcodeReader, expectedCommands);
     }
 
     [TestMethod]
@@ -165,7 +165,8 @@ public class LinearMoveTests
     public async Task TestDuplicateArgument()
     {
         await using Stream inputStream = new MemoryStream("G0 X10 X10"u8.ToArray());
-        await GCodeFile.ReadGCode(inputStream);
+        await using GCodeStreamReader gcodeStream = new GCodeStreamReader(inputStream);
+        await gcodeStream.ReadNextCommandAsync();
     }
 
     [TestMethod]
@@ -173,38 +174,7 @@ public class LinearMoveTests
     public async Task TestLinearMoveInvalidParam()
     {
         await using Stream inputStream = new MemoryStream("G0 A10"u8.ToArray());
-        await GCodeFile.ReadGCode(inputStream);
-    }
-
-
-    private async ValueTask AssertCommandsEqual(IAsyncEnumerable<Command> gcodeFile,
-        IEnumerable<string> expectedCommands)
-    {
-        MemoryStream memoryStream = new MemoryStream();
-
-        await using GCodeStreamWriter gcodeWriter = new(memoryStream);
-
-        await gcodeWriter.SaveCommandsAsync(gcodeFile);
-
-        await gcodeWriter.FlushAsync();
-        memoryStream.Position = 0;
-
-        
-        using StreamReader reader = new(memoryStream);
-
-        using IEnumerator<string> expectedCommandsIterator = expectedCommands.GetEnumerator();
-
-        
-        string? gcodeLine = await reader.ReadLineAsync();
-        while (gcodeLine != null && expectedCommandsIterator.MoveNext())
-        {
-            string expectedLine = expectedCommandsIterator.Current;
-            Assert.AreEqual(expectedLine, gcodeLine);
-            
-            gcodeLine = await reader.ReadLineAsync();
-        }
-
-        Assert.IsNull(gcodeLine);
-        Assert.IsFalse(expectedCommandsIterator.MoveNext());
+        await using GCodeStreamReader gcodeStream = new GCodeStreamReader(inputStream);
+        await gcodeStream.ReadNextCommandAsync();
     }
 }

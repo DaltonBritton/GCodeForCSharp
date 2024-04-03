@@ -11,11 +11,9 @@ public class CommentsTests
     {
         Stream inputStream = new MemoryStream("; this is a test Comment"u8.ToArray());
 
-        IEnumerable<Command> commands = await GCodeFile.ReadGCode(inputStream);
+        GCodeStreamReader gcodeStream = new GCodeStreamReader(inputStream);
 
-        string gcode = commands.GCodeToString();
-
-        Assert.AreEqual("; this is a test Comment\n", gcode);
+        await Helpers.AssertCommandsEqual(gcodeStream, ["; this is a test Comment"]);
     }
 
     [TestMethod]
@@ -23,10 +21,8 @@ public class CommentsTests
     {
         Stream inputStream = new MemoryStream("G28; this is a test Comment"u8.ToArray());
 
-        IEnumerable<Command> commands = await GCodeFile.ReadGCode(inputStream);
+        GCodeStreamReader gcodeStream = new GCodeStreamReader(inputStream);
 
-        string gcode = commands.GCodeToString();
-
-        Assert.AreEqual("G28; this is a test Comment\n", gcode);
+        await Helpers.AssertCommandsEqual(gcodeStream, ["G28; this is a test Comment"]);
     }
 }

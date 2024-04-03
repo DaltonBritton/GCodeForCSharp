@@ -2,7 +2,7 @@
 
 namespace GCodeParser.Commands;
 
-public partial class EmptyCommand(string comment = "") : Command($";{comment}", GCodeFlavor.Marlin)
+public partial class EmptyCommand(string command = "") : Command(command, GCodeFlavor.Marlin)
 {
     /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
