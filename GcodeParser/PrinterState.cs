@@ -1,5 +1,18 @@
-﻿namespace GCodeParser;
+﻿using GCodeParser.Commands;
 
+namespace GCodeParser;
+
+/// <summary>
+/// The state of a 3D printer at some point while parsing or saving GCode.
+/// <para>
+///      IMPORTANT:
+///             Setting fields of the printer state DOES NOT generate gcode,
+///             fields of the printer state should ONLY be set from WITHIN a <see cref="Command"/> class.
+///             Setting a field of the printer state without properly managing it within a <see cref="Command"/> class
+///             may CORRUPT the printer state and lead to errors when <see cref="Command">Commands</see> are parsed or
+///             converted to gcode.
+/// </para>
+/// </summary>
 public class PrinterState
 {
     private bool _absExtruderMode = true;
@@ -12,32 +25,50 @@ public class PrinterState
     private double _y;
     private double _z;
 
+    /// <summary>
+    /// The Current Absolute Position of the X Axis of the 3D Printer.
+    /// </summary>
     public double X
     {
         get => _x;
         set => SetAxis(value, ref _x, ref _absMode);
     }
 
+    /// <summary>
+    /// The Current Absolute Position of the Y Axis of the 3D Printer.
+    /// </summary>
     public double Y
     {
         get => _y;
         set => SetAxis(value, ref _y, ref _absMode);
     }
 
+    /// <summary>
+    /// The Current Absolute Position of the Z Axis of the 3D Printer.
+    /// </summary>
     public double Z
     {
         get => _z;
         set => SetAxis(value, ref _z, ref _absMode);
     }
 
+    /// <summary>
+    /// The Current Absolute Position of the E Axis of the 3D Printer.
+    /// </summary>
     public double E
     {
         get => _e;
         set => SetAxis(value, ref _e, ref _absExtruderMode);
     }
 
+    /// <summary>
+    /// The Current Maximum flow rate of the 3D Printer.
+    /// </summary>
     public double F { get; set; }
 
+    /// <summary>
+    /// The Current AbsMode of the 3D printer
+    /// </summary>
     public bool AbsMode
     {
         get => _absMode;
@@ -49,6 +80,10 @@ public class PrinterState
         }
     }
 
+    /// <summary>
+    /// The Current AbsMode of the extruder of the 3D printer.
+    /// Setting the AbsExtruderMode will override the AbsMode of the 3D printer
+    /// </summary>
     public bool AbsExtruderMode
     {
         get => _absExtruderMode;
