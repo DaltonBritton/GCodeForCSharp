@@ -6,11 +6,11 @@ namespace GCodeParser.Commands;
 
 public partial class LinearMoveCommand : Command
 {
-    private double _e;
-    private double _f;
-    private double _x;
-    private double _y;
-    private double _z;
+    private double? _e;
+    private double? _f;
+    private double? _x;
+    private double? _y;
+    private double? _z;
 
     public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
     {
@@ -25,25 +25,14 @@ public partial class LinearMoveCommand : Command
         }
     }
 
-    public LinearMoveCommand(PrinterState printerState, double? x = null, double? y = null, double? z = null,
+    public LinearMoveCommand(double? x = null, double? y = null, double? z = null,
         double? e = null, double? f = null)
     {
-        if (x != null)
-            printerState.X = (double)x;
-
-        if (y != null)
-            printerState.Y = (double)y;
-
-        if (z != null)
-            printerState.Z = (double)z;
-
-        if (e != null)
-            printerState.E = (double)e;
-
-        if (f != null)
-            printerState.F = (double)f;
-
-        GetNewPositions(printerState);
+        _f = f;
+        _x = x;
+        _y = y;
+        _z = z;
+        _e = e;
     }
 
     /// <inheritdoc />
@@ -52,7 +41,8 @@ public partial class LinearMoveCommand : Command
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
 
-        string gcode = Math.Abs(_e - state.E) > 0.00001 ? "G1" : "G0";
+
+        string gcode = _e != null ? "G1" : "G0";
 
         StringBuilder builder = new(gcode);
 
@@ -73,13 +63,23 @@ public partial class LinearMoveCommand : Command
         return commandString;
     }
 
-    protected override void ApplyToState(PrinterState printerState)
+    /// <inheritdoc />
+    public override void ApplyToState(PrinterState printerState)
     {
-        printerState.X = _x;
-        printerState.Y = _y;
-        printerState.Z = _z;
-        printerState.E = _e;
-        printerState.F = _f;
+        if (_x != null)
+            printerState.X = (double) _x;
+
+        if (_y != null)
+            printerState.Y = (double) _y;
+
+        if (_z != null)
+            printerState.Z = (double) _z;
+
+        if (_e != null)
+            printerState.E = (double) _e;
+
+        if (_f != null)
+            printerState.F = (double) _f;
     }
 
     
@@ -128,30 +128,28 @@ public partial class LinearMoveCommand : Command
             {
                 case ('X'):
                     CheckAndUpdateDuplicateArgumentFlag('X', ref x);
-                    state.X = axisPosition;
+                    _x = axisPosition;
                     break;
                 case ('Y'):
                     CheckAndUpdateDuplicateArgumentFlag('Y', ref y);
-                    state.Y = axisPosition;
+                    _y = axisPosition;
                     break;
                 case ('Z'):
                     CheckAndUpdateDuplicateArgumentFlag('Z', ref z);
-                    state.Z = axisPosition;
+                    _z = axisPosition;
                     break;
                 case ('E'):
                     CheckAndUpdateDuplicateArgumentFlag('E', ref e);
-                    state.E = axisPosition;
+                    _e = axisPosition;
                     break;
                 case ('F'):
                     CheckAndUpdateDuplicateArgumentFlag('F', ref f);
-                    state.F = axisPosition;
+                    _f = axisPosition;
                     break;
                 default:
                     throw new InvalidGCode($"Unable to parse argument, get{token}");
             }
         }
-
-        GetNewPositions(state);
     }
 
     private void CheckAndUpdateDuplicateArgumentFlag(char axisName, ref bool duplicateArgumentFlag)
@@ -188,10 +186,13 @@ public partial class LinearMoveCommand : Command
     [GeneratedRegex(@"^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 
-    private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double argumentValue,
+    private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
         double printerState)
     {
-        if (Math.Abs(argumentValue - printerState) > 0.00001)
+        if(argumentValue == null)
+            return;
+        
+        if (Math.Abs((double) argumentValue - printerState) > 0.00001)
             builder.Append($" {argumentName}{argumentValue}");
     }
 }
