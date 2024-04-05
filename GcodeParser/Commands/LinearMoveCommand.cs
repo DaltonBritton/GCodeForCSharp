@@ -12,12 +12,12 @@ public partial class LinearMoveCommand : Command
     private double? _y;
     private double? _z;
 
-    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
+    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
         switch (gcodeFlavor)
         {
             case (GCodeFlavor.Marlin):
-                ParseMarlin(command, state);
+                ParseMarlin(command);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(gcodeFlavor), gcodeFlavor,
@@ -92,7 +92,7 @@ public partial class LinearMoveCommand : Command
         };
     }
 
-    private void ParseMarlin(string command, PrinterState state)
+    private void ParseMarlin(string command)
     {
         IEnumerable<string> tokens = GetTokens(command);
 
@@ -107,10 +107,10 @@ public partial class LinearMoveCommand : Command
         if (commandCode is not ("G0" or "G1"))
             throw new InvalidGCode($"Marlin Linear Moves must start with G0 or G1, got {commandCode}");
 
-        ProcessTokens(tokensEnumerator, state);
+        ProcessTokens(tokensEnumerator);
     }
 
-    private void ProcessTokens(IEnumerator<string> tokens, PrinterState state)
+    private void ProcessTokens(IEnumerator<string> tokens)
     {
         // Initialize duplicate check flags
         bool x = false, y = false, z = false, e = false, f = false;
