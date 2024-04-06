@@ -83,7 +83,7 @@ namespace GcodeParser.Commands
         }
 
         /// <inheritdoc />
-        protected override void ApplyToState(PrinterState state)
+        public override void ApplyToState(PrinterState state)
         {
             switch (_heater)
             {

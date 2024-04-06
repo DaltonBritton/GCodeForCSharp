@@ -91,7 +91,7 @@ namespace GcodeParser.Commands
             return AddInlineComment(command, gcodeFlavor);
         }
         /// <inheritdoc/>
-        protected override void ApplyToState(PrinterState state)
+        public override void ApplyToState(PrinterState state)
         {
             if(_axes.TryGetValue(Axis.X, out bool isHomed))
                 state.xHome = isHomed;

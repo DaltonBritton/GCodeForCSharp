@@ -23,7 +23,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Null if no command was recognized.
     /// </param>
     /// <returns>True if the command was recognized, false if otherwise.</returns>
-    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, PrinterState printerState, [NotNullWhen(true)] out Command? command);
+    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, [NotNullWhen(true)] out Command? command);
     
     private readonly StreamReader _backingStream = new(inputStream);
 
@@ -41,7 +41,9 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         if (line == null)
             return null;
 
-        Command command = ReadLine(_printerState, line);
+        Command command = ReadLine(line);
+        
+        command.ApplyToState(_printerState);
 
         return command;
     }
@@ -53,7 +55,9 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         if (line == null)
             return null;
 
-        Command command = ReadLine(_printerState, line);
+        Command command = ReadLine(line);
+        
+        command.ApplyToState(_printerState);
 
         return command;
     }
@@ -119,16 +123,16 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     
     
 
-    private Command ReadLine(PrinterState printerState, string line)
+    private Command ReadLine(string line)
     {
-        if (EvaluateCustomCommandGenerators(line, printerState, out Command? customCommand))
+        if (EvaluateCustomCommandGenerators(line, out Command? customCommand))
             return customCommand;
         
         if (LinearMoveCommand.IsCommand(line, gcodeFlavor))
-            return new LinearMoveCommand(line, gcodeFlavor, printerState);
+            return new LinearMoveCommand(line, gcodeFlavor);
 
         if (AbsMovementMode.IsCommand(line, gcodeFlavor))
-            return new AbsMovementMode(line, gcodeFlavor, printerState);
+            return new AbsMovementMode(line, gcodeFlavor);
 
         if (HeaterTempCommand.IsCommand(line, gcodeFlavor))
             return new HeaterTempCommand(line, gcodeFlavor);
@@ -142,11 +146,11 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         return new UnrecognizedCommand(line, gcodeFlavor);
     }
 
-    private bool EvaluateCustomCommandGenerators(string gcodeLine, PrinterState printerState, [NotNullWhen(true)] out Command? command)
+    private bool EvaluateCustomCommandGenerators(string gcodeLine, [NotNullWhen(true)] out Command? command)
     {
         foreach (var customCommandGenerator in _customCommandGenerators)
         {
-            if (customCommandGenerator(gcodeLine, gcodeFlavor, printerState, out command))
+            if (customCommandGenerator(gcodeLine, gcodeFlavor, out command))
                 return true;
         }
 

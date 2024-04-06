@@ -61,7 +61,7 @@ public abstract class Command
     /// Applies all changes to the printer state executing this command may produce.
     /// </summary>
     /// <param name="state">The printer state before this command has been executed.</param>
-    protected abstract void ApplyToState(PrinterState state);
+    public abstract void ApplyToState(PrinterState state);
 
     /// <summary>
     /// Adds an inline comment with the appropriate syntax as required by the <paramref name="gcodeFlavor"/>.

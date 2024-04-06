@@ -9,7 +9,8 @@ public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Comm
         return command;
     }
 
-    protected override void ApplyToState(PrinterState state)
+    /// <inheritdoc />
+    public override void ApplyToState(PrinterState state)
     {
     }
 }
