@@ -50,7 +50,7 @@ namespace GcodeParser.Commands
         /// </summary>
         /// <param name="temp"></param>
         /// <param name="heater"></param>
-        public HeaterTempCommand(int temp, Heater heater)
+        public HeaterTempCommand(float temp, Heater heater)
         {
             this.temp = temp;
             this.heater = heater;
@@ -62,7 +62,7 @@ namespace GcodeParser.Commands
                 case Heater.hotend: commandStart = "M104"; break;
             }
 
-            command = $"{commandStart} + S{temp}";
+            command = $"{commandStart} S{temp}";
 
         }
 
