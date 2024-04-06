@@ -6,18 +6,18 @@ namespace GCodeParser.Commands;
 
 public partial class LinearMoveCommand : Command
 {
-    private double _e;
-    private double _f;
-    private double _x;
-    private double _y;
-    private double _z;
+    private double? _e;
+    private double? _f;
+    private double? _x;
+    private double? _y;
+    private double? _z;
 
-    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor, PrinterState state) : base(command, gcodeFlavor)
+    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
         switch (gcodeFlavor)
         {
             case (GCodeFlavor.Marlin):
-                ParseMarlin(command, state);
+                ParseMarlin(command);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(gcodeFlavor), gcodeFlavor,
@@ -25,25 +25,14 @@ public partial class LinearMoveCommand : Command
         }
     }
 
-    public LinearMoveCommand(PrinterState printerState, double? x = null, double? y = null, double? z = null,
+    public LinearMoveCommand(double? x = null, double? y = null, double? z = null,
         double? e = null, double? f = null)
     {
-        if (x != null)
-            printerState.X = (double)x;
-
-        if (y != null)
-            printerState.Y = (double)y;
-
-        if (z != null)
-            printerState.Z = (double)z;
-
-        if (e != null)
-            printerState.E = (double)e;
-
-        if (f != null)
-            printerState.F = (double)f;
-
-        GetNewPositions(printerState);
+        _f = f;
+        _x = x;
+        _y = y;
+        _z = z;
+        _e = e;
     }
 
     /// <inheritdoc />
@@ -52,18 +41,27 @@ public partial class LinearMoveCommand : Command
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
 
-        string gcode = Math.Abs(_e - state.E) > 0.00001 ? "G1" : "G0";
+
+        string gcode;
+        if (_e != null)
+        {
+            if ((state.AbsExtruderMode && !ApproxEqual((double)_e, state.E)) ||
+                (!state.AbsExtruderMode && !ApproxEqual((double)_e, 0)))
+                gcode = "G1";
+            else
+                gcode = "G0";
+        }
+        else
+            gcode = "G0";
 
         StringBuilder builder = new(gcode);
 
-        WriteArgumentToGCode(builder, "X", _x, state.X);
-        WriteArgumentToGCode(builder, "Y", _y, state.Y);
-        WriteArgumentToGCode(builder, "Z", _z, state.Z);
-        WriteArgumentToGCode(builder, "E", _e, state.E);
-        WriteArgumentToGCode(builder, "F", _f, state.F);
-
-        ApplyToState(state);
-
+        WriteArgumentToGCode(builder, "X", _x, state.X, state.AbsMode);
+        WriteArgumentToGCode(builder, "Y", _y, state.Y, state.AbsMode);
+        WriteArgumentToGCode(builder, "Z", _z, state.Z, state.AbsMode);
+        WriteArgumentToGCode(builder, "E", _e, state.E, state.AbsExtruderMode);
+        WriteArgumentToGCode(builder, "F", _f, state.F, state.AbsMode);
+        
         string commandString = builder.ToString();
         if (commandString == "G0")
             return string.Empty;
@@ -73,13 +71,23 @@ public partial class LinearMoveCommand : Command
         return commandString;
     }
 
-    protected override void ApplyToState(PrinterState printerState)
+    /// <inheritdoc />
+    public override void ApplyToState(PrinterState printerState)
     {
-        printerState.X = _x;
-        printerState.Y = _y;
-        printerState.Z = _z;
-        printerState.E = _e;
-        printerState.F = _f;
+        if (_x != null)
+            printerState.X = (double) _x;
+
+        if (_y != null)
+            printerState.Y = (double) _y;
+
+        if (_z != null)
+            printerState.Z = (double) _z;
+
+        if (_e != null)
+            printerState.E = (double) _e;
+
+        if (_f != null)
+            printerState.F = (double) _f;
     }
 
     
@@ -92,7 +100,7 @@ public partial class LinearMoveCommand : Command
         };
     }
 
-    private void ParseMarlin(string command, PrinterState state)
+    private void ParseMarlin(string command)
     {
         IEnumerable<string> tokens = GetTokens(command);
 
@@ -107,10 +115,10 @@ public partial class LinearMoveCommand : Command
         if (commandCode is not ("G0" or "G1"))
             throw new InvalidGCode($"Marlin Linear Moves must start with G0 or G1, got {commandCode}");
 
-        ProcessTokens(tokensEnumerator, state);
+        ProcessTokens(tokensEnumerator);
     }
 
-    private void ProcessTokens(IEnumerator<string> tokens, PrinterState state)
+    private void ProcessTokens(IEnumerator<string> tokens)
     {
         // Initialize duplicate check flags
         bool x = false, y = false, z = false, e = false, f = false;
@@ -128,30 +136,28 @@ public partial class LinearMoveCommand : Command
             {
                 case ('X'):
                     CheckAndUpdateDuplicateArgumentFlag('X', ref x);
-                    state.X = axisPosition;
+                    _x = axisPosition;
                     break;
                 case ('Y'):
                     CheckAndUpdateDuplicateArgumentFlag('Y', ref y);
-                    state.Y = axisPosition;
+                    _y = axisPosition;
                     break;
                 case ('Z'):
                     CheckAndUpdateDuplicateArgumentFlag('Z', ref z);
-                    state.Z = axisPosition;
+                    _z = axisPosition;
                     break;
                 case ('E'):
                     CheckAndUpdateDuplicateArgumentFlag('E', ref e);
-                    state.E = axisPosition;
+                    _e = axisPosition;
                     break;
                 case ('F'):
                     CheckAndUpdateDuplicateArgumentFlag('F', ref f);
-                    state.F = axisPosition;
+                    _f = axisPosition;
                     break;
                 default:
                     throw new InvalidGCode($"Unable to parse argument, get{token}");
             }
         }
-
-        GetNewPositions(state);
     }
 
     private void CheckAndUpdateDuplicateArgumentFlag(char axisName, ref bool duplicateArgumentFlag)
@@ -160,15 +166,6 @@ public partial class LinearMoveCommand : Command
             throw new InvalidGCode($"Got duplicate argument {axisName} for linear move command");
 
         duplicateArgumentFlag = true;
-    }
-
-    private void GetNewPositions(PrinterState state)
-    {
-        _x = state.X;
-        _y = state.Y;
-        _z = state.Z;
-        _e = state.E;
-        _f = state.F;
     }
 
     [Pure]
@@ -188,10 +185,21 @@ public partial class LinearMoveCommand : Command
     [GeneratedRegex(@"^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 
-    private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double argumentValue,
-        double printerState)
+    private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
+        double printerAxisState, bool isAbs)
     {
-        if (Math.Abs(argumentValue - printerState) > 0.00001)
+        if(argumentValue == null)
+            return;
+        
+        if (isAbs && !ApproxEqual((double) argumentValue, printerAxisState))
             builder.Append($" {argumentName}{argumentValue}");
+        else if (!isAbs && !ApproxEqual((double)argumentValue, 0))
+            builder.Append($" {argumentName}{printerAxisState+argumentValue}");
+
+    }
+
+    private static bool ApproxEqual(double n1, double n2)
+    {
+        return Math.Abs(n1 - n2) < 0.00001;
     }
 }

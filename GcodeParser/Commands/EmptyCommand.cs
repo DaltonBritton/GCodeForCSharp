@@ -19,9 +19,8 @@ public partial class EmptyCommand(string command = "") : Command(command, GCodeF
         };
     }
 
-    protected override void ApplyToState(PrinterState state)
-    {
-    }
+    /// <inheritdoc />
+    public override void ApplyToState(PrinterState state) { }
 
     [GeneratedRegex("^\\s*(?:;.*)?$")]
     private static partial Regex EmptyCommandRegex();
