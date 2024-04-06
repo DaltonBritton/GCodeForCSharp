@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GcodeParser
+﻿namespace GcodeParser
 {
     /// <summary>
     /// Enum for different heating elements
@@ -14,14 +8,14 @@ namespace GcodeParser
         /// <summary>
         /// Heater for bed
         /// </summary>
-        bed,
+        Bed,
         /// <summary>
         /// Heater for chamber
         /// </summary>
-        chamber,
+        Chamber,
         /// <summary>
         /// Heater for hot end
         /// </summary>
-        hotend,
+        Hotend,
     }
 }

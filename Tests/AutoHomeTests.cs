@@ -1,6 +1,6 @@
-﻿using GcodeParser.Commands;
+﻿using GcodeParser;
+using GcodeParser.Commands;
 using GCodeParser;
-using GCodeParser.Commands;
 
 namespace Tests;
 
@@ -11,7 +11,7 @@ public class AutoHomeTests
     public void TestCreateCommand1()
     {
         PrinterState printerState = new PrinterState();
-        AutoHomeCommand command = new(AutoHomeCommand.Axis.X);
+        AutoHomeCommand command = new(Axis.X);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
         Assert.AreEqual("G28 X ", generated);
@@ -21,9 +21,9 @@ public class AutoHomeTests
     public void TestCreateCommand2()
     {
         PrinterState printerState = new PrinterState();
-        List<AutoHomeCommand.Axis> list = new();
-        list.Add(AutoHomeCommand.Axis.X);
-        list.Add(AutoHomeCommand.Axis.Y);
+        List<Axis> list = new();
+        list.Add(Axis.X);
+        list.Add(Axis.Y);
         AutoHomeCommand command = new(list);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 

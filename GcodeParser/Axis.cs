@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GcodeParser
+﻿namespace GcodeParser
 {
     /// <summary>
     /// Enum for printer axes. X Y Z. 

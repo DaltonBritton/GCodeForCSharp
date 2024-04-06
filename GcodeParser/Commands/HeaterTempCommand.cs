@@ -44,18 +44,18 @@ namespace GcodeParser.Commands
             
             if (Regex.IsMatch(command, "^M140"))
             {
-                _heater = Heater.bed;
+                _heater = Heater.Bed;
                 if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
 
             }
             else if (Regex.IsMatch(command, "^M104"))
             {
-                _heater = Heater.hotend;
+                _heater = Heater.Hotend;
                 if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
             }
             else if (Regex.IsMatch(command, "^M141"))
             {
-                _heater = Heater.chamber;
+                _heater = Heater.Chamber;
                 if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
             }
             else
@@ -70,9 +70,9 @@ namespace GcodeParser.Commands
             string commandStart = "";
             switch (_heater)
             {
-                case Heater.chamber: commandStart = "M141"; break;
-                case Heater.bed: commandStart = "M140"; break;
-                case Heater.hotend: commandStart = "M104"; break;
+                case Heater.Chamber: commandStart = "M141"; break;
+                case Heater.Bed: commandStart = "M140"; break;
+                case Heater.Hotend: commandStart = "M104"; break;
             }
 
             string command = $"{commandStart} S{_temp} ";
@@ -85,9 +85,9 @@ namespace GcodeParser.Commands
         {
             switch (_heater)
             {
-                case Heater.chamber: state.chamberTemp = _temp; break;
-                case Heater.bed: state.bedTemp = _temp; break ;
-                case Heater.hotend: state.hotEndTemp = _temp; break;
+                case Heater.Chamber: state.chamberTemp = _temp; break;
+                case Heater.Bed: state.bedTemp = _temp; break ;
+                case Heater.Hotend: state.hotEndTemp = _temp; break;
             }
         }
         
