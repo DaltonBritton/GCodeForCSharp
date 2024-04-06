@@ -1,6 +1,7 @@
 ﻿using GcodeParser;
 using GcodeParser.Commands;
 using GCodeParser;
+using GCodeParser.Commands;
 
 namespace Tests;
 
@@ -48,5 +49,26 @@ public class AutoHomeTests
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
         Assert.AreEqual("G28 X ", generated);
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(InvalidGCode))]
+    public void TestInvalidRead()
+    {
+        PrinterState printerState = new PrinterState();
+        AutoHomeCommand command = new("G28 X L ", GCodeFlavor.Marlin);
+        
+    }
+
+
+    [TestMethod]
+    public void TestWithCommennt()
+    {
+        PrinterState printerState = new PrinterState();
+        AutoHomeCommand command = new("G28 X Y ; Lets Get more danger", GCodeFlavor.Marlin);
+        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
+
+        Assert.AreEqual("G28 X Y ; Lets Get more danger", generated);
+
     }
 }
