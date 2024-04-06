@@ -12,6 +12,17 @@ public class InvalidGCode(string message) : Exception(message);
 /// </summary>
 public abstract class Command
 {
+    
+    /// <summary>
+    /// Gets the command without any inline comments
+    /// </summary>
+    protected string RawCommand { get; }
+    
+    /// <summary>
+    /// Gets the inline comment contained within the line.
+    /// </summary>
+    private string InlineComment { get; }
+    
     /// <summary>
     /// Constructs a new Command.
     /// </summary>
@@ -33,14 +44,9 @@ public abstract class Command
         
         int commaLocation = command.IndexOf(';');
         InlineComment = (commaLocation != -1) ? command.Substring(commaLocation + 1) : string.Empty;
+
+        RawCommand = (commaLocation != -1) ? command.Substring(0, commaLocation + 1) : command;
     }
-    
-
-
-    /// <summary>
-    /// Gets the inline comment contained within the line.
-    /// </summary>
-    public string InlineComment { get; }
 
     /// <summary>
     /// Gets a string representing the command as gcode.
