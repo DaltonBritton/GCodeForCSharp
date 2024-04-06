@@ -140,9 +140,12 @@ namespace GcodeParser.Commands
         {
             if (command.Contains(charAfter))
             {
-                int indexOfNum = command.IndexOf(charAfter);
+                int indexOfNum = command.IndexOf(charAfter) + 1;
 
-                value = command.Substring(indexOfNum, command.IndexOf(" ", indexOfNum) - indexOfNum);
+                int valueLength = command.IndexOf(" ", indexOfNum) - indexOfNum;
+                if (valueLength < 0) valueLength = command.Length - indexOfNum;
+
+                value = command.Substring(indexOfNum, valueLength);
                 return true;
             }
             value = "";

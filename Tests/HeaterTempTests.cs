@@ -20,6 +20,10 @@ public class HeaterTempTests
     [TestMethod]
     public void TestReadCommand()
     {
+        PrinterState printerState = new PrinterState();
+        HeaterTempCommand command = new("M140 S97.7", GCodeFlavor.Marlin);
+        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
+        Assert.AreEqual("M140 S97.7", generated);
     }
 }
