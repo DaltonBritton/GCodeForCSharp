@@ -75,6 +75,10 @@ namespace GcodeParser.Commands
         /// <exception cref="InvalidGCode"></exception>
         public AutoHomeCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
         {
+            if (command.Contains(";"))
+            {
+                command = command.Substring(0, command.IndexOf(";"));
+            }
             if (GCodeFlavor.Marlin != gcodeFlavor) throw new InvalidGCode($"Unsupported GCode flavor {gcodeFlavor}");
 
             if (!Regex.IsMatch(command, "^G28")) { throw new InvalidGCode($"Invalid Auto Home Command {command}"); }

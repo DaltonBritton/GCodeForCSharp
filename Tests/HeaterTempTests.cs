@@ -1,6 +1,7 @@
 ﻿using GcodeParser;
 using GcodeParser.Commands;
 using GCodeParser;
+using GCodeParser.Commands;
 
 namespace Tests;
 
@@ -11,10 +12,10 @@ public class HeaterTempTests
     public void TestCreateCommand()
     {
         PrinterState printerState = new PrinterState();
-        HeaterTempCommand command = new(97.7f, Heater.Bed);
+        HeaterTempCommand command = new(97.7f, Heater.bed);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("M140 S97.7", generated);
+        Assert.AreEqual("M140 S97.7 ", generated);
     }
 
     [TestMethod]
