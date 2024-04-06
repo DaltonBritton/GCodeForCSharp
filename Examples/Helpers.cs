@@ -8,7 +8,7 @@ public static class Helpers
 {
     public static Command FillLine(PrinterState printerState, Vector3 movePosition, double layerHeight, double lineWidth, double filamentDiameter)
     {
-        Vector3 currentPosition = new Vector3()
+        Vector3 currentPosition = new()
         {
             X = (float) printerState.X,
             Y = (float) printerState.Y,
@@ -21,8 +21,7 @@ public static class Helpers
 
         double extruderMovement = GetExtrudeDistFromVolume(lineVolume, filamentDiameter);
 
-        //TODO: Create new Linear move Command
-
+        return new LinearMoveCommand(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, extruderMovement);
     }
 
     public static double GetExtrudeDistFromVolume(double volume, double filamentDiameter)
