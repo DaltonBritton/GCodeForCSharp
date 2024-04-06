@@ -15,7 +15,7 @@ public class AutoHomeTests
         AutoHomeCommand command = new(Axis.X);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("G28 X ", generated);
+        Assert.AreEqual("G28 X", generated);
     }
 
     [TestMethod]
@@ -28,7 +28,7 @@ public class AutoHomeTests
         AutoHomeCommand command = new(list);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("G28 X Y ", generated);
+        Assert.AreEqual("G28 X Y", generated);
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public class AutoHomeTests
         AutoHomeCommand command = new();
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("G28 X Y Z ", generated);
+        Assert.AreEqual("G28 X Y Z", generated);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class AutoHomeTests
         AutoHomeCommand command = new("G28 X ", GCodeFlavor.Marlin);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("G28 X ", generated);
+        Assert.AreEqual("G28 X", generated);
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public class AutoHomeTests
     public void TestInvalidRead()
     {
         PrinterState printerState = new PrinterState();
-        AutoHomeCommand command = new("G28 X L ", GCodeFlavor.Marlin);
+        AutoHomeCommand command = new("G28 X L", GCodeFlavor.Marlin);
         
     }
 
@@ -65,10 +65,10 @@ public class AutoHomeTests
     public void TestWithCommennt()
     {
         PrinterState printerState = new PrinterState();
-        AutoHomeCommand command = new("G28 X Y ; Lets Get more danger", GCodeFlavor.Marlin);
+        AutoHomeCommand command = new("G28 X Y; Lets Get more danger", GCodeFlavor.Marlin);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("G28 X Y ; Lets Get more danger", generated);
+        Assert.AreEqual("G28 X Y; Lets Get more danger", generated);
 
     }
 }

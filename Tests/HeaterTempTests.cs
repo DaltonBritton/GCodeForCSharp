@@ -15,7 +15,7 @@ public class HeaterTempTests
         HeaterTempCommand command = new(97.7f, Heater.Bed);
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
-        Assert.AreEqual("M140 S97.7 ", generated);
+        Assert.AreEqual("M140 S97.7", generated);
     }
 
     [TestMethod]

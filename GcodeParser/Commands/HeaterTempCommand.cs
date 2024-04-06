@@ -77,7 +77,7 @@ namespace GcodeParser.Commands
                 case Heater.Hotend: commandStart = "M104"; break;
             }
 
-            string command = $"{commandStart} S{_temp} ";
+            string command = $"{commandStart} S{_temp}";
             
             return AddInlineComment(command, gcodeFlavor);
         }
