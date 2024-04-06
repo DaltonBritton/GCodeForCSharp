@@ -93,6 +93,31 @@ public class PrinterState
             _extruderAbsOverride = true;
         }
     }
+    /// <summary>
+    /// Sets the temp of the hotEnd
+    /// </summary>
+    public float hotEndTemp = 0;
+    /// <summary>
+    /// Sets the temp of the bed
+    /// </summary>
+    public float bedTemp = 0;
+    /// <summary>
+    /// Sets the temp of the chamber
+    /// </summary>
+    public float chamberTemp = 0;
+
+    /// <summary>
+    /// True if the x axis has been homed
+    /// </summary>
+    public bool xHome = false;
+    /// <summary>
+    /// True if the y axis has been homed
+    /// </summary>
+    public bool yHome = false;
+    /// <summary>
+    /// True if the z axis has been homed
+    /// </summary>
+    public bool zHome = false;
 
     private void SetAxis(double value, ref double axis, ref bool isAbs)
     {

@@ -12,19 +12,36 @@ using System.Threading.Tasks;
 
 namespace GcodeParser.Commands
 {
-    internal class HeaterTempCommand : Command
+    public class HeaterTempCommand : Command
     {
 
-        private double? hotendTemp;
-        private double? bedTemp;
-        private double? chamerTemp;
-
-        private int? hotendMaterialIndex;
-        private int? bedIndex;
-        private int? hotendIndex;
+        private double temp;
 
 
         private string command;
+        public enum heaters
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            bed,
+            /// <summary>
+            /// 
+            /// </summary>
+            chamber,
+            /// <summary>
+            /// 
+            /// </summary>
+            hotend,
+        }
+
+        public HeaterTempCommand(string temp, heaters name)
+        { 
+            if (name == heaters.bed)
+            {
+
+            }
+        }
 
 
         public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
@@ -34,31 +51,22 @@ namespace GcodeParser.Commands
             if (Regex.IsMatch(command, "^M140"))
             {
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) bedTemp = double.Parse(SValue);
-
-                string IValue;
-                if (getStringAfterChar("I", out IValue)) bedIndex = int.Parse(IValue);
-
+                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
 
             }
             else if (Regex.IsMatch(command, "^M104"))
             {
-                if(command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp")}
+                if(command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp"); }
 
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) hotendTemp = double.Parse(SValue);
+                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
 
-                string IValue;
-                if (getStringAfterChar("I", out IValue)) hotendMaterialIndex = int.Parse(IValue);
-
-                string TValue;
-                if (getStringAfterChar("T", out TValue)) hotendMaterialIndex = int.Parse(TValue);
 
             }
             else if (Regex.IsMatch(command, "^M141"))
             {
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) chamerTemp = double.Parse(SValue);
+                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
             }
             else
             {
@@ -69,12 +77,21 @@ namespace GcodeParser.Commands
 
         public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
         {
-            throw new NotImplementedException();
+            //TODO add pathway for generative
+            return AddInlineComment(this.command, gcodeFlavor);
         }
 
         protected override void ApplyToState(PrinterState state)
         {
-            throw new NotImplementedException();
+
+        }
+
+        public static bool IsCommand(string command, GCodeFlavor gcodeFlavor)
+        {
+            if (gcodeFlavor == GCodeFlavor.Marlin) { throw new InvalidGCode("Can only parse Marlin"); }
+
+
+            return true;
         }
 
         private bool getStringAfterChar(string command, out string value)
