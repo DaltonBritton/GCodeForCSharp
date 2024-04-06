@@ -16,6 +16,9 @@ namespace GcodeParser.Commands
     /// </summary>
     public sealed partial class AutoHomeCommand : Command
     {
+        /// <summary>
+        /// Enum for printer axes. X Y Z. 
+        /// </summary>
         public enum Axis
         {
             /// <summary>
@@ -87,7 +90,7 @@ namespace GcodeParser.Commands
         }
 
         /// <summary>
-        /// Command for reading a Auto Home Command
+        /// Command for reading an Auto Home Command
         /// </summary>
         /// <param name="command"></param>
         /// <param name="gcodeFlavor"></param>
@@ -107,11 +110,12 @@ namespace GcodeParser.Commands
             if (command.Contains("Y")) { axes[1] = true; }
             if (command.Contains("Z")) { axes[2] = true; }
         }
+        /// <inheritdoc/>
         public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
         {
             return AddInlineComment(this.command, gcodeFlavor);
         }
-
+        /// <inheritdoc/>
         protected override void ApplyToState(PrinterState state)
         {
             if (axes[0]) { state.xHome = true; }
@@ -119,7 +123,13 @@ namespace GcodeParser.Commands
             if (axes[2]) { state.zHome = true; }
         }
 
-
+        /// <summary>
+        /// Checks if a given string is a valid Auto Home Command
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="gcodeFlavor"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidGCode"></exception>
         public static bool IsCommand(string command, GCodeFlavor gcodeFlavor)
         {
             if (GCodeFlavor.Marlin != gcodeFlavor) throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
