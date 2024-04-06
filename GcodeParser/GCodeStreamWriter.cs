@@ -21,6 +21,8 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     public void SaveCommand(Command command)
     {
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+
+        command.ApplyToState(_printerState);
         
         if(gcodeLine != string.Empty)
             _backingStream.WriteLine(gcodeLine);
@@ -33,6 +35,8 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     public async ValueTask SaveCommandAsync(Command command)
     {
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        
+        command.ApplyToState(_printerState);
         
         if(gcodeLine != string.Empty)
             await _backingStream.WriteLineAsync(gcodeLine);
