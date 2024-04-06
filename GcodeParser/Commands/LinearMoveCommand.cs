@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.Contracts;
 using System.Text;
 using System.Text.RegularExpressions;
+using GcodeParser.Commands;
 
 namespace GCodeParser.Commands;
 
@@ -94,7 +95,7 @@ public partial class LinearMoveCommand : Command
 
     private void ParseMarlin(string command, PrinterState state)
     {
-        IEnumerable<string> tokens = GetTokens(command);
+        IEnumerable<string> tokens = CommandUtils.GetTokens(command);
 
         using IEnumerator<string> tokensEnumerator = tokens.GetEnumerator();
 
@@ -169,20 +170,6 @@ public partial class LinearMoveCommand : Command
         _z = state.Z;
         _e = state.E;
         _f = state.F;
-    }
-
-    [Pure]
-    private static IEnumerable<string> GetTokens(string command)
-    {
-        int commaIndex = command.IndexOf(';');
-        if (commaIndex != -1)
-            command = command.Substring(0, commaIndex);
-
-        foreach (var token in command.Split(" "))
-        {
-            if (token != string.Empty)
-                yield return token;
-        }
     }
 
     [GeneratedRegex(@"^G[01]")]
