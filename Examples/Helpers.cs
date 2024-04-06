@@ -6,7 +6,7 @@ namespace Examples;
 
 public static class Helpers
 {
-    public static Command FillLine(PrinterState printerState, Vector3 movePosition, double layerHeight, double lineWidth, double filamentDiameter)
+    public static LinearMoveCommand FillLine(PrinterState printerState, Vector3 movePosition, float layerHeight, float lineWidth, float filamentDiameter, ref float totalExtruded)
     {
         Vector3 currentPosition = new()
         {
@@ -15,17 +15,31 @@ public static class Helpers
             Z = (float) printerState.Z
         };
 
-        double moveDist = (movePosition - currentPosition).Length();
+        float moveDist = (movePosition - currentPosition).Length();
 
-        double lineVolume = layerHeight * lineWidth * moveDist;
+        float lineVolume = layerHeight * lineWidth * moveDist;
 
-        double extruderMovement = GetExtrudeDistFromVolume(lineVolume, filamentDiameter);
+        float extruderMovement = GetExtrudeDistFromVolume(lineVolume, filamentDiameter);
 
-        return new LinearMoveCommand(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, extruderMovement);
+        totalExtruded += extruderMovement;
+        
+        LinearMoveCommand command = new(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, totalExtruded);
+        command.ApplyToState(printerState);
+
+        return command;
     }
 
-    public static double GetExtrudeDistFromVolume(double volume, double filamentDiameter)
+    private static float GetExtrudeDistFromVolume(float volume, float filamentDiameter)
     {
         return volume / (filamentDiameter * filamentDiameter);
+    }
+
+    public static Vector2 PolarToCartesian(float angle, float radius)
+    {
+        return new Vector2()
+        {
+            X = radius * float.Cos(angle),
+            Y = radius * float.Sin(angle),
+        };
     }
 }
