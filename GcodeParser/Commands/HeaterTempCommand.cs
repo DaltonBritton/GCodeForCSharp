@@ -62,7 +62,7 @@ namespace GcodeParser.Commands
                 case Heater.hotend: commandStart = "M104"; break;
             }
 
-            command = $"{commandStart} S{temp}";
+            command = $"{commandStart} S{temp} ";
 
         }
 

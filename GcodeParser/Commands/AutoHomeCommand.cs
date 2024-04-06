@@ -10,7 +10,11 @@ using static GcodeParser.Commands.AutoHomeCommand;
 
 namespace GcodeParser.Commands
 {
-    internal class AutoHomeCommand : Command
+    /// <summary>
+    /// Command for setting axes to Auto Home. 
+    /// Does not support [L] [O] or [R] parameters
+    /// </summary>
+    public sealed partial class AutoHomeCommand : Command
     {
         public enum Axis
         {
@@ -34,6 +38,19 @@ namespace GcodeParser.Commands
         private string command;
 
         /// <summary>
+        /// Constructor for generating an Auto Home command for all axes
+        /// </summary>
+        public AutoHomeCommand()
+        {
+            axes = new bool[3];
+            axes[0] = true; 
+            axes[1] = true; 
+            axes[2] = true;
+
+            command = "G28 X Y Z ";
+        }
+
+        /// <summary>
         /// Constructor for generating an Auto Home command for multiple Axes
         /// </summary>
         /// <param name="inputAxes"></param>
@@ -44,7 +61,7 @@ namespace GcodeParser.Commands
             if (inputAxes.Contains(Axis.Y)) { axes[1] = true; }
             if (inputAxes.Contains(Axis.Z)) { axes[2] = true; }
 
-            StringBuilder builder = new StringBuilder("G28");
+            StringBuilder builder = new StringBuilder("G28 ");
             
             foreach(Axis curr in inputAxes)
             { 
@@ -66,7 +83,7 @@ namespace GcodeParser.Commands
             if (axis == (Axis.Y)) { axes[1] = true; }
             if (axis == (Axis.Z)) { axes[2] = true; }
 
-            command = "G28 " + axis.ToString();
+            command = "G28 " + axis.ToString() + " ";
         }
 
         /// <summary>
