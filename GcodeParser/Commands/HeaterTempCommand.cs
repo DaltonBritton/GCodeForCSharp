@@ -12,61 +12,90 @@ using System.Threading.Tasks;
 
 namespace GcodeParser.Commands
 {
-    public class HeaterTempCommand : Command
+    /// <summary>
+    /// Class for creating HeaterTempCommands. Can construct based on an existing command or generate based
+    /// On temperature and heating element parameters. 
+    /// 
+    /// Does not handle auto temp or multi index heating elements, or material settings. 
+    /// </summary>
+    public sealed partial class HeaterTempCommand : Command
     {
 
-        private double temp;
-
+        private float temp;
+        private Heater heater;
 
         private string command;
-        public enum heaters
+
+        /// <summary>
+        /// Enum for different heating elements
+        /// </summary>
+        public enum Heater
         {
             /// <summary>
-            /// 
+            /// Heater for bed
             /// </summary>
             bed,
             /// <summary>
-            /// 
+            /// Heater for chamber
             /// </summary>
             chamber,
             /// <summary>
-            /// 
+            /// Heater for hot end
             /// </summary>
             hotend,
         }
 
-        public HeaterTempCommand(string temp, heaters name)
-        { 
-            if (name == heaters.bed)
+        /// <summary>
+        /// Constructor for creating a write able heater command
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <param name="heater"></param>
+        public HeaterTempCommand(int temp, Heater heater)
+        {
+            this.temp = temp;
+            this.heater = heater;
+            string commandStart = "";
+            switch (heater)
             {
-
+                case Heater.chamber: commandStart = "M141"; break;
+                case Heater.bed: commandStart = "M140"; break;
+                case Heater.hotend: commandStart = "M104"; break;
             }
+
+            command = $"{commandStart} + S{temp}";
+
         }
 
-
+        /// <summary>
+        /// Command for reading a heater command
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="gcodeFlavor"></param>
+        /// <exception cref="InvalidGCode"></exception>
         public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
         {
-            
+            if (command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp"); }
+            if (command.Contains("I") || command.Contains("T")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support multi index bed, hot end or materials"); }
+
             this.command = command;
             if (Regex.IsMatch(command, "^M140"))
             {
+                heater = Heater.bed;
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
+                if (getStringAfterChar('S', command, out SValue)) temp = float.Parse(SValue);
 
             }
             else if (Regex.IsMatch(command, "^M104"))
             {
-                if(command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp"); }
-
+                heater = Heater.hotend;
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
-
-
+                if (getStringAfterChar('S', command, out SValue)) temp = float.Parse(SValue);
             }
             else if (Regex.IsMatch(command, "^M141"))
             {
+                heater = Heater.chamber;
                 string SValue;
-                if (getStringAfterChar("S", out SValue)) temp = double.Parse(SValue);
+                if (getStringAfterChar('S', command, out SValue)) temp = float.Parse(SValue);
             }
             else
             {
@@ -74,31 +103,44 @@ namespace GcodeParser.Commands
             }
 
         }
-
+        /// <inheritdoc />
         public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
         {
-            //TODO add pathway for generative
             return AddInlineComment(this.command, gcodeFlavor);
         }
 
+        /// <inheritdoc />
         protected override void ApplyToState(PrinterState state)
         {
-
+            switch (this.heater)
+            {
+                case Heater.chamber: state.chamberTemp = temp; break;
+                case Heater.bed: state.bedTemp = temp; break ;
+                case Heater.hotend: state.hotEndTemp = temp; break;
+            }
         }
-
+        /// <inheritdoc />
         public static bool IsCommand(string command, GCodeFlavor gcodeFlavor)
         {
-            if (gcodeFlavor == GCodeFlavor.Marlin) { throw new InvalidGCode("Can only parse Marlin"); }
-
-
-            return true;
+            return gcodeFlavor switch
+            {
+                (GCodeFlavor.Marlin) => SettingHeaterCommandRegex().IsMatch(command),
+                _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
+            };
         }
 
-        private bool getStringAfterChar(string command, out string value)
+        /// <summary>
+        /// Returns the value of the parameter that begins with the given character
+        /// </summary>
+        /// <param name="charAfter"></param>
+        /// <param name="command"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool getStringAfterChar(char charAfter, string command, out string value)
         {
-            if (command.Contains("I"))
+            if (command.Contains(charAfter))
             {
-                int indexOfNum = command.IndexOf("I");
+                int indexOfNum = command.IndexOf(charAfter);
 
                 value = command.Substring(indexOfNum, command.IndexOf(" ", indexOfNum) - indexOfNum);
                 return true;
@@ -106,5 +148,8 @@ namespace GcodeParser.Commands
             value = "";
             return false;
         }
+
+        [GeneratedRegex(@"(^M104)|(^M140)|(^M141)")]
+        private static partial Regex SettingHeaterCommandRegex();
     }
 }
