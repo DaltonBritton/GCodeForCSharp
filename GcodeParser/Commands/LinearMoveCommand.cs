@@ -42,18 +42,26 @@ public partial class LinearMoveCommand : Command
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
 
 
-        string gcode = _e != null ? "G1" : "G0";
+        string gcode;
+        if (_e != null)
+        {
+            if ((state.AbsExtruderMode && !ApproxEqual((double)_e, state.E)) ||
+                (!state.AbsExtruderMode && !ApproxEqual((double)_e, 0)))
+                gcode = "G1";
+            else
+                gcode = "G0";
+        }
+        else
+            gcode = "G0";
 
         StringBuilder builder = new(gcode);
 
-        WriteArgumentToGCode(builder, "X", _x, state.X);
-        WriteArgumentToGCode(builder, "Y", _y, state.Y);
-        WriteArgumentToGCode(builder, "Z", _z, state.Z);
-        WriteArgumentToGCode(builder, "E", _e, state.E);
-        WriteArgumentToGCode(builder, "F", _f, state.F);
-
-        ApplyToState(state);
-
+        WriteArgumentToGCode(builder, "X", _x, state.X, state.AbsMode);
+        WriteArgumentToGCode(builder, "Y", _y, state.Y, state.AbsMode);
+        WriteArgumentToGCode(builder, "Z", _z, state.Z, state.AbsMode);
+        WriteArgumentToGCode(builder, "E", _e, state.E, state.AbsExtruderMode);
+        WriteArgumentToGCode(builder, "F", _f, state.F, state.AbsMode);
+        
         string commandString = builder.ToString();
         if (commandString == "G0")
             return string.Empty;
@@ -160,15 +168,6 @@ public partial class LinearMoveCommand : Command
         duplicateArgumentFlag = true;
     }
 
-    private void GetNewPositions(PrinterState state)
-    {
-        _x = state.X;
-        _y = state.Y;
-        _z = state.Z;
-        _e = state.E;
-        _f = state.F;
-    }
-
     [Pure]
     private static IEnumerable<string> GetTokens(string command)
     {
@@ -187,12 +186,20 @@ public partial class LinearMoveCommand : Command
     private static partial Regex MarlinLinearMoveCommand();
 
     private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
-        double printerState)
+        double printerAxisState, bool isAbs)
     {
         if(argumentValue == null)
             return;
         
-        if (Math.Abs((double) argumentValue - printerState) > 0.00001)
+        if (isAbs && !ApproxEqual((double) argumentValue, printerAxisState))
             builder.Append($" {argumentName}{argumentValue}");
+        else if (!isAbs && !ApproxEqual((double)argumentValue, 0))
+            builder.Append($" {argumentName}{printerAxisState+argumentValue}");
+
+    }
+
+    private static bool ApproxEqual(double n1, double n2)
+    {
+        return Math.Abs(n1 - n2) < 0.00001;
     }
 }
