@@ -26,24 +26,7 @@ namespace GcodeParser.Commands
 
         private string command;
 
-        /// <summary>
-        /// Enum for different heating elements
-        /// </summary>
-        public enum Heater
-        {
-            /// <summary>
-            /// Heater for bed
-            /// </summary>
-            bed,
-            /// <summary>
-            /// Heater for chamber
-            /// </summary>
-            chamber,
-            /// <summary>
-            /// Heater for hot end
-            /// </summary>
-            hotend,
-        }
+        
 
         /// <summary>
         /// Constructor for creating a write able heater command
