@@ -17,7 +17,6 @@ namespace GcodeParser.Commands
 
         private readonly float _temp;
         private readonly Heater _heater;
-        private readonly string _command;
 
         
 
@@ -30,16 +29,6 @@ namespace GcodeParser.Commands
         {
             _temp = temp;
             _heater = heater;
-            string commandStart = "";
-            switch (heater)
-            {
-                case Heater.chamber: commandStart = "M141"; break;
-                case Heater.bed: commandStart = "M140"; break;
-                case Heater.hotend: commandStart = "M104"; break;
-            }
-
-            _command = $"{commandStart} S{temp} ";
-
         }
 
         /// <summary>
@@ -52,8 +41,7 @@ namespace GcodeParser.Commands
         {
             if (command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp"); }
             if (command.Contains("I") || command.Contains("T")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support multi index bed, hot end or materials"); }
-
-            _command = command;
+            
             if (Regex.IsMatch(command, "^M140"))
             {
                 _heater = Heater.bed;
@@ -79,7 +67,17 @@ namespace GcodeParser.Commands
         /// <inheritdoc />
         public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
         {
-            return AddInlineComment(_command, gcodeFlavor);
+            string commandStart = "";
+            switch (_heater)
+            {
+                case Heater.chamber: commandStart = "M141"; break;
+                case Heater.bed: commandStart = "M140"; break;
+                case Heater.hotend: commandStart = "M104"; break;
+            }
+
+            string command = $"{commandStart} S{_temp} ";
+            
+            return AddInlineComment(command, gcodeFlavor);
         }
 
         /// <inheritdoc />
