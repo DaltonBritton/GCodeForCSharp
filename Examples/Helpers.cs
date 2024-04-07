@@ -31,7 +31,8 @@ public static class Helpers
 
     private static float GetExtrudeDistFromVolume(float volume, float filamentDiameter)
     {
-        return volume / (filamentDiameter * filamentDiameter);
+        float filamentRadius = filamentDiameter / 2;
+        return volume / (float.Pi * filamentRadius * filamentRadius);
     }
 
     public static Vector2 PolarToCartesian(float angle, float radius)
