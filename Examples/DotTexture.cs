@@ -15,7 +15,7 @@ public static class DotTexture
         float circleCircumference = 2 * float.Pi * radius;
         float dotDiameter = circleCircumference / resolution;
 
-        float currentHeight = layerHeight;
+        float currentHeight = supportingRingLayerHeight;
         float currentAngle = 0;
         float totalExtruded = 0;
         
@@ -27,18 +27,18 @@ public static class DotTexture
             new UnrecognizedCommand("M82", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin),
             new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin),
-            new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: currentHeight)
+            new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: supportingRingLayerHeight, f: 3600)
         ];
         gcodeWriter.SaveCommands(commands);
 
         
         // Create Starting movement to wipe nozzle
-        Vector3 linePos = new(offset.X, offset.Y+ 10, currentHeight);
-        Helpers.FillLine(gcodeWriter, linePos, currentHeight, dotDiameter * 1.5f, filamentDiameter,
+        Vector3 linePos = new(offset.X, offset.Y+ 10, supportingRingLayerHeight);
+        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter,
             ref totalExtruded);
         
-        linePos = new(offset.X, offset.Y, currentHeight);
-        Helpers.FillLine(gcodeWriter, linePos, currentHeight, dotDiameter * 1.5f, filamentDiameter,
+        linePos = new(offset.X, offset.Y, supportingRingLayerHeight);
+        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter,
             ref totalExtruded);
         
 
@@ -49,7 +49,7 @@ public static class DotTexture
             Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset,
                 ref totalExtruded, resolution: resolution);
 
-            currentHeight += layerHeight;
+            currentHeight += supportingRingLayerHeight;
         }
 
         // Draw dots
@@ -77,7 +77,9 @@ public static class DotTexture
             Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset,
                 ref totalExtruded, resolution: resolution);
 
-            currentHeight += layerHeight;
+            currentHeight += supportingRingLayerHeight;
         }
+        
+        gcodeWriter.SaveCommand(new LinearMoveCommand(z: currentHeight + 30));
     }
 }
