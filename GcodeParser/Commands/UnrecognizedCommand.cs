@@ -8,6 +8,12 @@ public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Comm
     {
         return command;
     }
+    
+    /// <inheritdoc cref="ToGCode(GCodeParser.PrinterState,GCodeParser.GCodeFlavor)"/>
+    public string ToGCode()
+    {
+        return command;
+    }
 
     /// <inheritdoc />
     public override void ApplyToState(PrinterState state)

@@ -27,7 +27,7 @@ public static class VaseMode
             new UnrecognizedCommand("G90", GCodeFlavor.Marlin),
             new UnrecognizedCommand("M82", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin),
+            new UnrecognizedCommand("M109 S180", GCodeFlavor.Marlin),
             new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: currentHeight)
         ];
 
