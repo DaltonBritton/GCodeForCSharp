@@ -59,8 +59,20 @@ public partial class LinearMoveCommand : Command
         WriteArgumentToGCode(builder, "X", _x, state.X, state.AbsMode);
         WriteArgumentToGCode(builder, "Y", _y, state.Y, state.AbsMode);
         WriteArgumentToGCode(builder, "Z", _z, state.Z, state.AbsMode);
-        WriteArgumentToGCode(builder, "E", _e, state.E, state.AbsExtruderMode);
-        WriteArgumentToGCode(builder, "F", _f, state.F, state.AbsMode);
+        WriteArgumentToGCode(builder, "F", _f, state.F, true);
+
+        if (_e != null)
+        {
+            switch (state.AbsExtruderMode)
+            {
+                case true when !ApproxEqual((double)_e, state.E):
+                    builder.Append($" E{_e-state.E}");
+                    break;
+                case false when !ApproxEqual((double)_e, 0):
+                    builder.Append($" E{_e}");
+                    break;
+            }
+        }
         
         string commandString = builder.ToString();
         if (commandString == "G0")
@@ -91,11 +103,18 @@ public partial class LinearMoveCommand : Command
     }
 
     
-    public static bool IsCommand(string command, GCodeFlavor gcodeFlavor)
+    /// <summary>
+    /// Checks if the given <paramref name="gcodeLine"/> is a valid LinearMoveCommand.
+    /// </summary>
+    /// <param name="gcodeLine">A single line of gcode without any newline chars</param>
+    /// <param name="gcodeFlavor"></param>
+    /// <returns>True if the given <paramref name="gcodeLine"/> is a valid LinearMoveCommand, False otherwise.</returns>
+    /// <exception cref="InvalidGCode">Thrown if an unsupported gcodeFlavor is provided</exception>
+    public static bool IsCommand(string gcodeLine, GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
         {
-            (GCodeFlavor.Marlin) => MarlinLinearMoveCommand().IsMatch(command),
+            (GCodeFlavor.Marlin) => MarlinLinearMoveCommand().IsMatch(gcodeLine),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }
