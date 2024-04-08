@@ -8,7 +8,7 @@ namespace Examples;
 public static class VaseMode
 {
 
-    public static List<Command> SpiralVase(float layerHeight, float lineWidth, float filamentDiameter, float radius, float vaseHeight, float textureFrequency,
+    public static void SpiralVase(GCodeStreamWriter gcodeWriter, float layerHeight, float lineWidth, float filamentDiameter, float radius, float vaseHeight, float textureFrequency,
         float textureAmplitude, float resolution = 2.03f*float.Pi/100, int rotationsPerLayer = 1)
     {
         float currentHeight = layerHeight;
@@ -20,7 +20,6 @@ public static class VaseMode
         Vector2 offset = new Vector2(radius+textureAmplitude, radius+textureAmplitude) * 1.25f;
 
 
-        PrinterState printerState = new();
         List<Command> commands =
         [
             new UnrecognizedCommand("M104 S210", GCodeFlavor.Marlin),
@@ -28,29 +27,24 @@ public static class VaseMode
             new UnrecognizedCommand("G90", GCodeFlavor.Marlin),
             new UnrecognizedCommand("M82", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin)
+            new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin),
+            new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: currentHeight)
         ];
 
-
-        LinearMoveCommand startPos = new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: currentHeight);
-        startPos.ApplyToState(printerState);
-        commands.Add(startPos);
+        gcodeWriter.SaveCommands(commands);
 
 
         Vector3 linePos = new(offset.X - 10, offset.Y + 10, currentHeight);
-        Command startCommand = Helpers.FillLine(printerState, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
             ref totalExtruded);
-        commands.Add(startCommand);
         
         linePos = new(offset.X - 10, offset.Y, currentHeight);
-        startCommand = Helpers.FillLine(printerState, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
             ref totalExtruded);
-        commands.Add(startCommand);
         
         linePos = new(offset.X, offset.Y, currentHeight);
-        startCommand = Helpers.FillLine(printerState, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
             ref totalExtruded);
-        commands.Add(startCommand);
 
         while (currentHeight < vaseHeight)
         {
@@ -70,17 +64,12 @@ public static class VaseMode
             };
 
             // create movement Command
-            Command command;
             if(IsFirstLayer(angle, rotationsPerLayer))
-                command = Helpers.FillLine(printerState, vasePosition3D, currentHeight, lineWidth*1.5f, filamentDiameter, ref totalExtruded);
+                Helpers.FillLine(gcodeWriter, vasePosition3D, currentHeight, lineWidth*1.5f, filamentDiameter, ref totalExtruded);
             else
-                command = Helpers.FillLine(printerState, vasePosition3D, layerHeight, lineWidth, filamentDiameter, ref totalExtruded);
-
-            
-            commands.Add(command);
+                Helpers.FillLine(gcodeWriter, vasePosition3D, layerHeight, lineWidth, filamentDiameter, ref totalExtruded);
         }
 
-        return commands;
     }
 
     [Pure]

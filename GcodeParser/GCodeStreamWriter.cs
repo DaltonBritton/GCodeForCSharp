@@ -12,7 +12,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
 {
     private readonly StreamWriter _backingStream = new(outputStream);
 
-    private readonly PrinterState _printerState = new();
+    /// <summary>
+    /// The Current State of the printer given all commands provided to the GCodeStreamWriter
+    /// </summary>
+    public readonly PrinterState PrinterState = new();
 
     /// <summary>
     /// Saves a command to the output stream.
@@ -20,9 +23,9 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     /// <param name="command">The command to save.</param>
     public void SaveCommand(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        string gcodeLine = command.ToGCode(PrinterState, gcodeFlavor);
 
-        command.ApplyToState(_printerState);
+        command.ApplyToState(PrinterState);
         
         if(gcodeLine != string.Empty)
             _backingStream.WriteLine(gcodeLine);
@@ -34,9 +37,9 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     /// <param name="command">The command to save.</param>
     public async ValueTask SaveCommandAsync(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        string gcodeLine = command.ToGCode(PrinterState, gcodeFlavor);
         
-        command.ApplyToState(_printerState);
+        command.ApplyToState(PrinterState);
         
         if(gcodeLine != string.Empty)
             await _backingStream.WriteLineAsync(gcodeLine);
