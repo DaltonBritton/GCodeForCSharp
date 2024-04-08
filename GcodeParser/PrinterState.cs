@@ -1,4 +1,5 @@
-﻿using GCodeParser.Commands;
+﻿using System.Numerics;
+using GCodeParser.Commands;
 
 namespace GCodeParser;
 
@@ -20,6 +21,7 @@ public class PrinterState
     private bool _absMode = true;
     private double _e;
     private bool _extruderAbsOverride;
+    private Vector4 _offset;
 
     private double _x;
     private double _y;
@@ -31,7 +33,7 @@ public class PrinterState
     public double X
     {
         get => _x;
-        set => SetAxis(value, ref _x, ref _absMode);
+        set => SetAxis(value, ref _x, ref _absMode, _offset.X);
     }
 
     /// <summary>
@@ -40,7 +42,7 @@ public class PrinterState
     public double Y
     {
         get => _y;
-        set => SetAxis(value, ref _y, ref _absMode);
+        set => SetAxis(value, ref _y, ref _absMode,_offset.Y);
     }
 
     /// <summary>
@@ -49,7 +51,7 @@ public class PrinterState
     public double Z
     {
         get => _z;
-        set => SetAxis(value, ref _z, ref _absMode);
+        set => SetAxis(value, ref _z, ref _absMode,_offset.Z);
     }
 
     /// <summary>
@@ -58,7 +60,7 @@ public class PrinterState
     public double E
     {
         get => _e;
-        set => SetAxis(value, ref _e, ref _absExtruderMode);
+        set => SetAxis(value, ref _e, ref _absExtruderMode,_offset.W);
     }
 
     /// <summary>
@@ -66,6 +68,11 @@ public class PrinterState
     /// </summary>
     public double F { get; set; }
 
+    /// <summary>
+    /// The current FanSpeed
+    /// </summary>
+    public float FanSpeed { get; set; }
+    
     /// <summary>
     /// The Current AbsMode of the 3D printer
     /// </summary>
@@ -93,6 +100,15 @@ public class PrinterState
             _extruderAbsOverride = true;
         }
     }
+
+    /// <summary>
+    /// The offset applied to X Y Z and E values
+    /// </summary>
+    public Vector4 Offset
+    {
+        get => _offset;
+        set => _offset = value;
+    }
     /// <summary>
     /// Sets the temp of the hotEnd
     /// </summary>
@@ -119,10 +135,10 @@ public class PrinterState
     /// </summary>
     public bool zHome = false;
 
-    private void SetAxis(double value, ref double axis, ref bool isAbs)
+    private void SetAxis(double value, ref double axis, ref bool isAbs, double offsetvalue)
     {
         if (isAbs)
-            axis = value;
+            axis = value + offsetvalue;
         else
             axis += value;
     }

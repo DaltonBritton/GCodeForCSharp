@@ -143,6 +143,15 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         if (EmptyCommand.IsCommand(line, gcodeFlavor))
             return new EmptyCommand(line);
 
+        if (SetFanSpeed.IsCommand(line, gcodeFlavor))
+            return new SetFanSpeed(line, gcodeFlavor);
+
+        if (SetPosition.IsCommand(line, gcodeFlavor))
+            return new SetPosition(line, gcodeFlavor);
+        {
+            
+        }
+
         return new UnrecognizedCommand(line, gcodeFlavor);
     }
 
