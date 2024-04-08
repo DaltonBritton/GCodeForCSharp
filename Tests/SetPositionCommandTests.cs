@@ -16,7 +16,6 @@ public class SetPositionCommandTests
     public void TestCreateCommand()
     {
         SetPosition command = new(10,11, 12,13);
-        command.ApplyToState(_printerState);
         string createdCommand = command.ToGCode(_printerState, GCodeFlavor.Marlin);
         
         Assert.AreEqual("G92 X10 Y11 Z12 E13", createdCommand);
@@ -26,7 +25,6 @@ public class SetPositionCommandTests
     public void TestReadCommand()
     {
         SetPosition command = new("G92 X11 E12", GCodeFlavor.Marlin);
-        command.ApplyToState(_printerState);
         string createdCommand = command.ToGCode(_printerState, GCodeFlavor.Marlin);
         
         Assert.AreEqual("G92 X11 E12", createdCommand);
@@ -35,6 +33,10 @@ public class SetPositionCommandTests
     [TestMethod]
     public void TestOffset()
     {
-        
+        SetPosition command = new("G92 Y100", GCodeFlavor.Marlin);
+        _printerState.Y = 45;
+        command.ApplyToState(_printerState);
+        _printerState.Y = 0;
+        Assert.AreEqual(-55, _printerState.Y);
     }
 }

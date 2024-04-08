@@ -29,7 +29,7 @@ public partial class SetFanSpeed : Command
 
         }
         
-        else if (Regex.IsMatch(message, "^106"))
+        else if (Regex.IsMatch(message, "^M106"))
         {
             if (message.Contains("I"))
             {
@@ -41,6 +41,9 @@ public partial class SetFanSpeed : Command
                 if (GetStringAfterChar('S', message, out var speed)) 
                     _fanSpeed = speed == "" ? 255 : float.Parse(speed);
             }
+            else
+                _fanSpeed = 255;
+            
 
             if (message.Contains("P"))
             {
@@ -67,10 +70,10 @@ public partial class SetFanSpeed : Command
     /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
     {
-        if (state.FanSpeed == 0)
-            return "M107";
+        if (_fanSpeed == 0)
+            return AddInlineComment("M107", gcodeFlavor);
 
-        return $"M106 S{state.FanSpeed}";
+        return AddInlineComment($"M106 S{_fanSpeed}", gcodeFlavor) ;
     }
 
     /// <inheritdoc />

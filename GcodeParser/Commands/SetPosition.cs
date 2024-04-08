@@ -64,35 +64,38 @@ public partial class SetPosition : Command
     public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
     {
         string command = "G92";
-        if (state.Offset.X != 0)
-            command += $" X{state.Offset.X}";
-        if (state.Offset.Y != 0)
-            command += $" Y{state.Offset.Y}";
-        if (state.Offset.Z != 0)
-            command += $" Z{state.Offset.Z}";
-        if (state.Offset.W != 0)
-            command += $" E{state.Offset.W}";
-        return command;
+        if (_offset.X != 0)
+            command += $" X{_offset.X}";
+        if (_offset.Y != 0)
+            command += $" Y{_offset.Y}";
+        if (_offset.Z != 0)
+            command += $" Z{_offset.Z}";
+        if (_offset.W != 0)
+            command += $" E{_offset.W}";
+        return AddInlineComment(command, gcodeFlavor);
     }
 
     /// <inheritdoc/>
     public override void ApplyToState(PrinterState state)
     {
-        state.Offset = _offset;
+        state.Offset = new Vector4((float)(state.X - _offset.X),
+            (float)(state.Y - _offset.Y),
+            (float)(state.Z - _offset.Z),
+            (float)(state.E - _offset.W));
     }
     
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="meesage"></param>
+    /// <param name="message"></param>
     /// <param name="gCodeFlavor"></param>
     /// <returns></returns>
     /// <exception cref="InvalidGCode"></exception>
-    public static bool IsCommand(string meesage, GCodeFlavor gCodeFlavor)
+    public static bool IsCommand(string message, GCodeFlavor gCodeFlavor)
     {
         return gCodeFlavor switch
         {
-            (GCodeFlavor.Marlin) => SettingPositionCommandRegex().IsMatch(meesage),
+            (GCodeFlavor.Marlin) => SettingPositionCommandRegex().IsMatch(message),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gCodeFlavor}")
         };
     }
