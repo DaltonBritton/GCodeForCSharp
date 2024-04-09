@@ -14,7 +14,6 @@ public static class VaseMode
         float currentHeight = layerHeight;
         float heightIncrementPerStep = layerHeight * resolution / (2 * float.Pi);
         heightIncrementPerStep /= rotationsPerLayer;
-        float totalExtruded = 0;
         float angle = 0;
         
         Vector2 offset = new Vector2(radius+textureAmplitude, radius+textureAmplitude) * 1.25f;
@@ -35,16 +34,13 @@ public static class VaseMode
 
 
         Vector3 linePos = new(offset.X - 10, offset.Y + 10, currentHeight);
-        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
-            ref totalExtruded);
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter);
         
         linePos = new(offset.X - 10, offset.Y, currentHeight);
-        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
-            ref totalExtruded);
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter);
         
         linePos = new(offset.X, offset.Y, currentHeight);
-        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter,
-            ref totalExtruded);
+        Helpers.FillLine(gcodeWriter, linePos, currentHeight, lineWidth * 1.5f, filamentDiameter);
 
         while (currentHeight < vaseHeight)
         {
@@ -65,9 +61,9 @@ public static class VaseMode
 
             // create movement Command
             if(IsFirstLayer(angle, rotationsPerLayer))
-                Helpers.FillLine(gcodeWriter, vasePosition3D, currentHeight, lineWidth*1.5f, filamentDiameter, ref totalExtruded);
+                Helpers.FillLine(gcodeWriter, vasePosition3D, currentHeight, lineWidth*1.5f, filamentDiameter);
             else
-                Helpers.FillLine(gcodeWriter, vasePosition3D, layerHeight, lineWidth, filamentDiameter, ref totalExtruded);
+                Helpers.FillLine(gcodeWriter, vasePosition3D, layerHeight, lineWidth, filamentDiameter);
         }
 
     }

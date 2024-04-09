@@ -6,7 +6,7 @@ namespace Examples;
 
 public static class Helpers
 {
-    public static void FillLine(GCodeStreamWriter gcodeWriter, Vector3 movePosition, float layerHeight, float lineWidth, float filamentDiameter, ref float totalExtruded)
+    public static void FillLine(GCodeStreamWriter gcodeWriter, Vector3 movePosition, float layerHeight, float lineWidth, float filamentDiameter)
     {
         Vector3 currentPosition = new()
         {
@@ -20,10 +20,8 @@ public static class Helpers
         float lineVolume = layerHeight * lineWidth * moveDist;
 
         float extruderMovement = GetExtrudeDistFromVolume(lineVolume, filamentDiameter);
-
-        totalExtruded += extruderMovement;
         
-        LinearMoveCommand command = new(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, totalExtruded);
+        LinearMoveCommand command = new(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, extruderMovement);
         gcodeWriter.SaveCommand(command);
     }
 
@@ -42,7 +40,7 @@ public static class Helpers
         gcodeWriter.SaveCommand(new LinearMoveCommand(e: totalExtruded));
     }
 
-    public static void DrawCircle(GCodeStreamWriter gcodeWriter, float radius, float currentHeight, float layerHeight, float lineWidth, float filamentDiameter, Vector2 center, ref float totalExtruded, float startAngle = 0,
+    public static void DrawCircle(GCodeStreamWriter gcodeWriter, float radius, float currentHeight, float layerHeight, float lineWidth, float filamentDiameter, Vector2 center, float startAngle = 0,
         int resolution = 100)
     {
         float angleStep = 2 * float.Pi / resolution;
@@ -54,7 +52,7 @@ public static class Helpers
 
             Vector3 pointPos = new(circleOutline2D, currentHeight);
 
-            FillLine(gcodeWriter, pointPos, layerHeight, lineWidth, filamentDiameter, ref totalExtruded);
+            FillLine(gcodeWriter, pointPos, layerHeight, lineWidth, filamentDiameter);
 
             startAngle += angleStep;
         }

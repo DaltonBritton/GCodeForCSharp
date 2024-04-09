@@ -34,20 +34,17 @@ public static class DotTexture
         
         // Create Starting movement to wipe nozzle
         Vector3 linePos = new(offset.X, offset.Y+ 10, supportingRingLayerHeight);
-        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter,
-            ref totalExtruded);
+        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter);
         
         linePos = new(offset.X, offset.Y, supportingRingLayerHeight);
-        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter,
-            ref totalExtruded);
+        Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter);
         
 
         
         // Generate Supporting Ring Bottom
         for (int supportingRingLayerIndex = 0; supportingRingLayerIndex < supportingRingLayers; supportingRingLayerIndex++)
         {
-            Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset,
-                ref totalExtruded, resolution: resolution);
+            Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset, resolution: resolution);
 
             currentHeight += supportingRingLayerHeight;
         }
@@ -74,8 +71,7 @@ public static class DotTexture
         // Generate Supporting Ring Top
         for (int supportingRingLayerIndex = 0; supportingRingLayerIndex < supportingRingLayers; supportingRingLayerIndex++)
         {
-            Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset,
-                ref totalExtruded, resolution: resolution);
+            Helpers.DrawCircle(gcodeWriter, radius, currentHeight, supportingRingLayerHeight, dotDiameter, filamentDiameter, offset, resolution: resolution);
 
             currentHeight += supportingRingLayerHeight;
         }
