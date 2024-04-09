@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using GcodeParser.Commands;
 using GCodeParser.Commands;
 
 namespace GCodeParser;
@@ -132,6 +133,12 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
 
         if (AbsMovementMode.IsCommand(line, gcodeFlavor))
             return new AbsMovementMode(line, gcodeFlavor);
+
+        if (HeaterTempCommand.IsCommand(line, gcodeFlavor))
+            return new HeaterTempCommand(line, gcodeFlavor);
+
+        if (AutoHomeCommand.IsCommand(line, gcodeFlavor))
+            return new AutoHomeCommand(line, gcodeFlavor);
 
         if (EmptyCommand.IsCommand(line, gcodeFlavor))
             return new EmptyCommand(line);
