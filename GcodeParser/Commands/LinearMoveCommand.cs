@@ -183,15 +183,6 @@ public partial class LinearMoveCommand : Command
         }
     }
 
-    private void GetNewPositions(PrinterState state)
-    {
-        _x = state.X;
-        _y = state.Y;
-        _z = state.Z;
-        _e = state.E;
-        _f = state.F;
-    }
-
     [GeneratedRegex(@"^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 

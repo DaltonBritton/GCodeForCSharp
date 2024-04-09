@@ -2,7 +2,6 @@
 
 using Examples;
 using GCodeParser;
-using GCodeParser.Commands;
 
 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 string gcodeFilePath = $"{documentsPath}{Path.DirectorySeparatorChar}fancyStuff.gcode";
