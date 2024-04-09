@@ -25,6 +25,8 @@ public class PrinterState
     private double _y;
     private double _z;
 
+    private readonly Dictionary<string, object> _externalProperties = new();
+
     /// <summary>
     /// The Current Absolute Position of the X Axis of the 3D Printer.
     /// </summary>
@@ -93,6 +95,18 @@ public class PrinterState
             _extruderAbsOverride = true;
         }
     }
+
+    /// <summary>
+    /// Used to add properties to the PrinterState when injecting custom parsers or saving custom commands.
+    ///
+    /// Ideally would only be modified within the <see cref="Command.ApplyToState"/> method.
+    /// </summary>
+    public object this[string property]
+    {
+        get => _externalProperties[property];
+        set => _externalProperties[property] = value;
+    }
+
     /// <summary>
     /// Sets the temp of the hotEnd
     /// </summary>
