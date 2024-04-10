@@ -103,20 +103,19 @@ public partial class LinearMoveCommand : Command
 
     private void ParseMarlin(string command)
     {
-        IEnumerable<string> tokens = CommandUtils.GetTokens(command);
+        Dictionary<string, double> arguments =
+            CommandUtils.GetNumericArgumentsWithoutDuplicates(command, GCodeFlavor.Marlin);
 
-        using IEnumerator<string> tokensEnumerator = tokens.GetEnumerator();
-
-        // Advance tokensEnumerator to G0/G1
-        if (!tokensEnumerator.MoveNext())
-            throw new InvalidGCode("Expected 'G0' or 'G1' but didn't find valid token at beginning of line");
-
-        string commandCode = tokensEnumerator.Current;
-
-        if (commandCode is not ("G0" or "G1"))
-            throw new InvalidGCode($"Marlin Linear Moves must start with G0 or G1, got {commandCode}");
-
-        ProcessTokens(tokensEnumerator);
+        if (arguments.Remove("X", out var argumentValue))
+            _x = argumentValue;
+        if (arguments.Remove("Y", out argumentValue))
+            _y = argumentValue;
+        if (arguments.Remove("Z", out argumentValue))
+            _z = argumentValue;
+        if (arguments.Remove("E", out argumentValue))
+            _e = argumentValue;
+        if (arguments.Remove("F", out argumentValue))
+            _f = argumentValue;
     }
 
     private void ProcessTokens(IEnumerator<string> tokens)
