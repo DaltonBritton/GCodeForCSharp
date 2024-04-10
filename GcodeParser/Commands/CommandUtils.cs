@@ -47,6 +47,9 @@ public static class CommandUtils
     public static Dictionary<string, double> GetNumericArgumentsWithoutDuplicates(string command,
         GCodeFlavor gcodeFlavor)
     {
+        if (gcodeFlavor != GCodeFlavor.Marlin)
+            throw new InvalidGCode("Unsupported GCodeFlavor");
+        
         IEnumerable<string> tokens = GetTokens(command);
         Dictionary<string, double> arguments = new();
         bool isFirst = true;

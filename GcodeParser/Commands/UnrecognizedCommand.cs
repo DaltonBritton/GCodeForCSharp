@@ -1,5 +1,8 @@
 ﻿namespace GCodeParser.Commands;
 
+/// <summary>
+/// Creates a Unrecognized command
+/// </summary>
 public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
 {
     

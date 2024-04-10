@@ -39,7 +39,7 @@ namespace GcodeParser.Commands
         /// <exception cref="InvalidGCode"></exception>
         public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
         {
-            if (command.Contains(";")) command = command.Substring(0, command.IndexOf(";"));
+            if (command.Contains(";")) command = command.Substring(0, command.IndexOf(";", StringComparison.Ordinal));
             
             if (command.Contains("F") || command.Contains("B")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp"); }
             if (command.Contains("I") || command.Contains("T")) { throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support multi index bed, hot end or materials"); }

@@ -21,7 +21,6 @@ public sealed partial class AbsMovementMode : Command
     /// Creates a new Absolute Movement Mode Command.
     /// </summary>
     /// <param name="isAbs"></param>
-    /// <param name="printerState">The state of the printer before applying the Absolute Movement Mode Command</param>
     /// <param name="extruderOnly"></param>
     /// <param name="inlineComment"></param>
     /// <exception cref="InvalidGCode">Thrown if unable to parse line.</exception>

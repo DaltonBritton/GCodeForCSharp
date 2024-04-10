@@ -5,6 +5,9 @@ using GcodeParser.Commands;
 
 namespace GCodeParser.Commands;
 
+/// <summary>
+/// Moves the print head to a the given location. Represents the command G0, G1
+/// </summary>
 public partial class LinearMoveCommand : Command
 {
     private double? _e;
@@ -13,6 +16,12 @@ public partial class LinearMoveCommand : Command
     private double? _y;
     private double? _z;
 
+    /// <summary>
+    /// Creates a new Linear Move Command from the GCode representation of the command.
+    /// </summary>
+    /// <param name="command">The String Representation of a linear move command. (ex. G0, G1)</param>
+    /// <param name="gcodeFlavor">Dictates the syntax which to read the command with.</param>
+    /// <exception cref="InvalidGCode">Thrown if an unsupported gcodeFlavor is provided.</exception>
     public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
         switch (gcodeFlavor)
@@ -21,11 +30,13 @@ public partial class LinearMoveCommand : Command
                 ParseMarlin(command);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(gcodeFlavor), gcodeFlavor,
-                    $"Unsupported GCode Flavor {gcodeFlavor}");
+                throw new InvalidGCode($"Unsupported GCode Flavor {gcodeFlavor}");
         }
     }
 
+    /// <summary>
+    /// Creates an new Linear Move Command, used for gcode generation.
+    /// </summary>
     public LinearMoveCommand(double? x = null, double? y = null, double? z = null,
         double? e = null, double? f = null)
     {
@@ -111,6 +122,7 @@ public partial class LinearMoveCommand : Command
     /// <param name="gcodeFlavor"></param>
     /// <returns>True if the given <paramref name="gcodeLine"/> is a valid LinearMoveCommand, False otherwise.</returns>
     /// <exception cref="InvalidGCode">Thrown if an unsupported gcodeFlavor is provided</exception>
+    [Pure]
     public static bool IsCommand(string gcodeLine, GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
@@ -135,56 +147,9 @@ public partial class LinearMoveCommand : Command
             _e = argumentValue;
         if (arguments.Remove("F", out argumentValue))
             _f = argumentValue;
-    }
 
-    private void ProcessTokens(IEnumerator<string> tokens)
-    {
-        // Initialize duplicate check flags
-        bool x = false, y = false, z = false, e = false, f = false;
-        while (tokens.MoveNext())
-        {
-            string token = tokens.Current;
-
-            // Extract the argument name and axis position from the token
-            char argumentName = token[0];
-            if (!double.TryParse(token[1..], out double axisPosition))
-                throw new InvalidGCode($"Unable to parse argument, get {token}");
-
-            // Update the corresponding printerState based on the argument name
-            switch (argumentName)
-            {
-                case ('X'):
-                    CheckAndUpdateDuplicateArgumentFlag('X', ref x);
-                    _x = axisPosition;
-                    break;
-                case ('Y'):
-                    CheckAndUpdateDuplicateArgumentFlag('Y', ref y);
-                    _y = axisPosition;
-                    break;
-                case ('Z'):
-                    CheckAndUpdateDuplicateArgumentFlag('Z', ref z);
-                    _z = axisPosition;
-                    break;
-                case ('E'):
-                    CheckAndUpdateDuplicateArgumentFlag('E', ref e);
-                    _e = axisPosition;
-                    break;
-                case ('F'):
-                    CheckAndUpdateDuplicateArgumentFlag('F', ref f);
-                    _f = axisPosition;
-                    break;
-                default:
-                    throw new InvalidGCode($"Unable to parse argument, get{token}");
-            }
-        }
-    }
-
-    private void CheckAndUpdateDuplicateArgumentFlag(char axisName, ref bool duplicateArgumentFlag)
-    {
-        if (duplicateArgumentFlag)
-            throw new InvalidGCode($"Got duplicate argument {axisName} for linear move command");
-
-        duplicateArgumentFlag = true;
+        if (arguments.Count != 0)
+            throw new InvalidGCode($"Unexpected Arguments in {command}");
     }
 
     [GeneratedRegex(@"^G[01]")]
