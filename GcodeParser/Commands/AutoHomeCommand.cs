@@ -94,13 +94,13 @@ namespace GcodeParser.Commands
         public override void ApplyToState(PrinterState state)
         {
             if(_axes.TryGetValue(Axis.X, out bool isHomed))
-                state.xHome = isHomed;
+                state.XHome = isHomed;
             
             if(_axes.TryGetValue(Axis.Y, out isHomed))
-                state.xHome = isHomed;
+                state.XHome = isHomed;
             
             if(_axes.TryGetValue(Axis.Z, out isHomed))
-                state.xHome = isHomed;
+                state.XHome = isHomed;
         }
 
         /// <summary>
