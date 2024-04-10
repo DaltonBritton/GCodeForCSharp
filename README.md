@@ -13,7 +13,7 @@ You can install the GCode Parser/Generator library via NuGet Package Manager:
 
 
 ```
-Install-Package GCodeParserGenerator
+Install-Package GCodeForCSharp
 ```
 
 ## Usage
