@@ -25,7 +25,7 @@ public class PrinterState
     private double _y;
     private double _z;
 
-    private Dictionary<string, object> externalProperties;
+    private readonly Dictionary<string, object> _externalProperties = new();
 
     /// <summary>
     /// The Current Absolute Position of the X Axis of the 3D Printer.
@@ -103,35 +103,35 @@ public class PrinterState
     /// </summary>
     public object this[string property]
     {
-        get => externalProperties[property];
-        set => externalProperties[property] = value;
+        get => _externalProperties[property];
+        set => _externalProperties[property] = value;
     }
 
     /// <summary>
     /// Sets the temp of the hotEnd
     /// </summary>
-    public float hotEndTemp = 0;
+    public float HotEndTemp = 0;
     /// <summary>
     /// Sets the temp of the bed
     /// </summary>
-    public float bedTemp = 0;
+    public float BedTemp = 0;
     /// <summary>
     /// Sets the temp of the chamber
     /// </summary>
-    public float chamberTemp = 0;
+    public float ChamberTemp = 0;
 
     /// <summary>
     /// True if the x axis has been homed
     /// </summary>
-    public bool xHome = false;
+    public bool XHome = false;
     /// <summary>
     /// True if the y axis has been homed
     /// </summary>
-    public bool yHome = false;
+    public bool YHome = false;
     /// <summary>
     /// True if the z axis has been homed
     /// </summary>
-    public bool zHome = false;
+    public bool ZHome = false;
 
     private void SetAxis(double value, ref double axis, ref bool isAbs)
     {

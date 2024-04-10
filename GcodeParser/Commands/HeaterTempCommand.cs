@@ -87,9 +87,9 @@ namespace GcodeParser.Commands
         {
             switch (_heater)
             {
-                case Heater.Chamber: state.chamberTemp = _temp; break;
-                case Heater.Bed: state.bedTemp = _temp; break ;
-                case Heater.Hotend: state.hotEndTemp = _temp; break;
+                case Heater.Chamber: state.ChamberTemp = _temp; break;
+                case Heater.Bed: state.BedTemp = _temp; break ;
+                case Heater.Hotend: state.HotEndTemp = _temp; break;
             }
         }
         
