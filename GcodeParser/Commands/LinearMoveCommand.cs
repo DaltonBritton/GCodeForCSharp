@@ -169,29 +169,6 @@ public partial class LinearMoveCommand : Command
         duplicateArgumentFlag = true;
     }
 
-    [Pure]
-    private static IEnumerable<string> GetTokens(string command)
-    {
-        int commaIndex = command.IndexOf(';');
-        if (commaIndex != -1)
-            command = command.Substring(0, commaIndex);
-
-        foreach (var token in command.Split(" "))
-        {
-            if (token != string.Empty)
-                yield return token;
-        }
-    }
-
-    private void GetNewPositions(PrinterState state)
-    {
-        _x = state.X;
-        _y = state.Y;
-        _z = state.Z;
-        _e = state.E;
-        _f = state.F;
-    }
-
     [GeneratedRegex(@"^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 
