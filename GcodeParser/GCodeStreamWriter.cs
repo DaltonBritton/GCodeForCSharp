@@ -23,8 +23,8 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
 
         command.ApplyToState(_printerState);
-        
-        if(gcodeLine != string.Empty)
+
+        if (gcodeLine != string.Empty)
             _backingStream.WriteLine(gcodeLine);
     }
 
@@ -35,10 +35,10 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     public async ValueTask SaveCommandAsync(Command command)
     {
         string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
-        
+
         command.ApplyToState(_printerState);
-        
-        if(gcodeLine != string.Empty)
+
+        if (gcodeLine != string.Empty)
             await _backingStream.WriteLineAsync(gcodeLine);
     }
 
@@ -82,7 +82,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         _backingStream.Flush();
     }
-    
+
     /// <inheritdoc cref="Flush"/>
     public async Task FlushAsync()
     {
@@ -95,6 +95,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         _backingStream.Dispose();
         outputStream.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     /// <inheritdoc />
@@ -102,6 +103,6 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         await _backingStream.DisposeAsync();
         await outputStream.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
-    
 }

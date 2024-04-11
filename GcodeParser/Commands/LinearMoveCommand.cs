@@ -26,7 +26,7 @@ public partial class LinearMoveCommand : Command
     {
         switch (gcodeFlavor)
         {
-            case (GCodeFlavor.Marlin):
+            case GCodeFlavor.Marlin:
                 ParseMarlin(command);
                 break;
             default:
@@ -78,14 +78,14 @@ public partial class LinearMoveCommand : Command
             switch (state.AbsExtruderMode)
             {
                 case true when !ApproxEqual((double)_e, state.E):
-                    builder.Append($" E{_e-state.E}");
+                    builder.Append($" E{_e - state.E}");
                     break;
                 case false when !ApproxEqual((double)_e, 0):
                     builder.Append($" E{_e}");
                     break;
             }
         }
-        
+
         string commandString = builder.ToString();
         if (commandString == "G0")
             return string.Empty;
@@ -99,22 +99,22 @@ public partial class LinearMoveCommand : Command
     public override void ApplyToState(PrinterState printerState)
     {
         if (_x != null)
-            printerState.X = (double) _x;
+            printerState.X = (double)_x;
 
         if (_y != null)
-            printerState.Y = (double) _y;
+            printerState.Y = (double)_y;
 
         if (_z != null)
-            printerState.Z = (double) _z;
+            printerState.Z = (double)_z;
 
         if (_e != null)
-            printerState.E = (double) _e;
+            printerState.E = (double)_e;
 
         if (_f != null)
-            printerState.F = (double) _f;
+            printerState.F = (double)_f;
     }
 
-    
+
     /// <summary>
     /// Checks if the given <paramref name="gcodeLine"/> is a valid LinearMoveCommand.
     /// </summary>
@@ -127,7 +127,7 @@ public partial class LinearMoveCommand : Command
     {
         return gcodeFlavor switch
         {
-            (GCodeFlavor.Marlin) => MarlinLinearMoveCommand().IsMatch(gcodeLine),
+            GCodeFlavor.Marlin => MarlinLinearMoveCommand().IsMatch(gcodeLine),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }
@@ -152,20 +152,24 @@ public partial class LinearMoveCommand : Command
             throw new InvalidGCode($"Unexpected Arguments in {command}");
     }
 
-    [GeneratedRegex(@"^G[01]")]
+    [GeneratedRegex("^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 
-    private void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
+    private static void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
         double printerAxisState, bool isAbs)
     {
-        if(argumentValue == null)
+        if (argumentValue == null)
             return;
-        
-        if (isAbs && !ApproxEqual((double) argumentValue, printerAxisState))
-            builder.Append($" {argumentName}{argumentValue}");
-        else if (!isAbs && !ApproxEqual((double)argumentValue, 0))
-            builder.Append($" {argumentName}{printerAxisState+argumentValue}");
 
+        switch (isAbs)
+        {
+            case true when !ApproxEqual((double)argumentValue, printerAxisState):
+                builder.Append($" {argumentName}{argumentValue}");
+                break;
+            case false when !ApproxEqual((double)argumentValue, 0):
+                builder.Append($" {argumentName}{printerAxisState + argumentValue}");
+                break;
+        }
     }
 
     private static bool ApproxEqual(double n1, double n2)

@@ -1,6 +1,4 @@
-﻿
-
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using GCodeParser;
 using GCodeParser.Commands;
 
@@ -11,7 +9,6 @@ namespace GcodeParser.Commands;
 /// </summary>
 public static class CommandUtils
 {
-    
     /// <summary>
     /// Gets all tokens within a command.
     /// <example>
@@ -25,9 +22,9 @@ public static class CommandUtils
     public static IEnumerable<string> GetTokens(string command)
     {
         int commaIndex = command.IndexOf(';');
-        
+
         if (commaIndex != -1)
-            command = command.Substring(0, commaIndex);
+            command = command[..commaIndex];
 
         foreach (var token in command.Split(' '))
         {
@@ -49,7 +46,7 @@ public static class CommandUtils
     {
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode("Unsupported GCodeFlavor");
-        
+
         IEnumerable<string> tokens = GetTokens(command);
         Dictionary<string, double> arguments = new();
         bool isFirst = true;
@@ -64,7 +61,8 @@ public static class CommandUtils
 
             string argumentName = token[0].ToString();
             if (!double.TryParse(token[1..], out double argumentValue))
-                throw new InvalidGCode($"Unable to parse argument {argumentName}, in command {command} as a numeric value");
+                throw new InvalidGCode(
+                    $"Unable to parse argument {argumentName}, in command {command} as a numeric value");
 
             if (!arguments.TryAdd(argumentName, argumentValue))
                 throw new InvalidGCode($"Duplicate argument {argumentName}, in command {command}");

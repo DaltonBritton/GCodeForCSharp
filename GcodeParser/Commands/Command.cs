@@ -12,22 +12,22 @@ public class InvalidGCode(string message) : Exception(message);
 /// </summary>
 public abstract class Command
 {
-    
     /// <summary>
     /// Gets the command without any inline comments
     /// </summary>
     protected string RawCommand { get; }
-    
+
     /// <summary>
     /// Gets the inline comment contained within the line.
     /// </summary>
     private string InlineComment { get; }
-    
+
     /// <summary>
     /// Constructs a new Command.
     /// </summary>
     protected Command()
     {
+        RawCommand = string.Empty;
         InlineComment = string.Empty;
     }
 
@@ -41,11 +41,11 @@ public abstract class Command
     {
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
-        
-        int commaLocation = command.IndexOf(';');
-        InlineComment = (commaLocation != -1) ? command.Substring(commaLocation + 1) : string.Empty;
 
-        RawCommand = (commaLocation != -1) ? command.Substring(0, commaLocation + 1) : command;
+        int commaLocation = command.IndexOf(';');
+        InlineComment = commaLocation != -1 ? command[(commaLocation + 1)..] : string.Empty;
+
+        RawCommand = commaLocation != -1 ? command[..(commaLocation + 1)] : command;
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public abstract class Command
     {
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
-        
+
         return InlineComment != string.Empty ? $"{command};{InlineComment}" : command;
     }
 }

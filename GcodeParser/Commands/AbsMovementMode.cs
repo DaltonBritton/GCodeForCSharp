@@ -13,7 +13,6 @@ namespace GCodeParser.Commands;
 /// </summary>
 public sealed partial class AbsMovementMode : Command
 {
-    
     private readonly bool _isAbs;
     private readonly bool _extruderOnly;
 
@@ -24,12 +23,13 @@ public sealed partial class AbsMovementMode : Command
     /// <param name="extruderOnly"></param>
     /// <param name="inlineComment"></param>
     /// <exception cref="InvalidGCode">Thrown if unable to parse line.</exception>
-    public AbsMovementMode(bool isAbs, bool extruderOnly = false, string inlineComment = ""): base($";{inlineComment}", GCodeFlavor.Marlin)
+    public AbsMovementMode(bool isAbs, bool extruderOnly = false, string inlineComment = "") : base($";{inlineComment}",
+        GCodeFlavor.Marlin)
     {
         _isAbs = isAbs;
         _extruderOnly = extruderOnly;
     }
-    
+
     /// <summary>
     /// Creates a new Absolute Movement Mode Command.
     /// </summary>
@@ -39,15 +39,16 @@ public sealed partial class AbsMovementMode : Command
     public AbsMovementMode(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
         _extruderOnly = false;
-        if (Regex.IsMatch(command, "^G90"))
+        if (SetAbsCommandRegex().IsMatch(command))
             _isAbs = true;
-        else if (Regex.IsMatch(command, "^G91"))
+        else if (SetRelCommandRegex().IsMatch(command))
             _isAbs = false;
-        else if (Regex.IsMatch(command, "^M82"))
+        else if (SetExtruderAbsRegex().IsMatch(command))
         {
             _isAbs = true;
             _extruderOnly = true;
-        } else if (Regex.IsMatch(command, "^M83"))
+        }
+        else if (SetExtruderRelRegex().IsMatch(command))
         {
             _isAbs = false;
             _extruderOnly = true;
@@ -82,11 +83,23 @@ public sealed partial class AbsMovementMode : Command
     {
         return gcodeFlavor switch
         {
-            (GCodeFlavor.Marlin) => SettingAbsModeCommandRegex().IsMatch(gcodeLine),
+            GCodeFlavor.Marlin => SettingAbsModeCommandRegex().IsMatch(gcodeLine),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }
 
-    [GeneratedRegex(@"(^G91)|(^G90)|(^M82)|(^M83)")]
+    [GeneratedRegex("(^G91)|(^G90)|(^M82)|(^M83)")]
     private static partial Regex SettingAbsModeCommandRegex();
+    
+    [GeneratedRegex("^G90")]
+    private static partial Regex SetAbsCommandRegex();
+    
+    [GeneratedRegex("^G91")]
+    private static partial Regex SetRelCommandRegex();
+    
+    [GeneratedRegex("^M82")]
+    private static partial Regex SetExtruderAbsRegex();
+    
+    [GeneratedRegex("^M83")]
+    private static partial Regex SetExtruderRelRegex();
 }

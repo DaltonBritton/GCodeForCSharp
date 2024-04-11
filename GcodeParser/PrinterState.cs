@@ -111,10 +111,12 @@ public class PrinterState
     /// Sets the temp of the hotEnd
     /// </summary>
     public float HotEndTemp = 0;
+
     /// <summary>
     /// Sets the temp of the bed
     /// </summary>
     public float BedTemp = 0;
+
     /// <summary>
     /// Sets the temp of the chamber
     /// </summary>
@@ -124,16 +126,18 @@ public class PrinterState
     /// True if the x axis has been homed
     /// </summary>
     public bool XHome = false;
+
     /// <summary>
     /// True if the y axis has been homed
     /// </summary>
     public bool YHome = false;
+
     /// <summary>
     /// True if the z axis has been homed
     /// </summary>
     public bool ZHome = false;
 
-    private void SetAxis(double value, ref double axis, ref bool isAbs)
+    private static void SetAxis(double value, ref double axis, ref bool isAbs)
     {
         if (isAbs)
             axis = value;

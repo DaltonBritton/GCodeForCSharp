@@ -14,13 +14,15 @@ public partial class EmptyCommand(string command = "") : Command(command, GCodeF
     {
         return gcodeFlavor switch
         {
-            (GCodeFlavor.Marlin) => EmptyCommandRegex().IsMatch(line),
+            GCodeFlavor.Marlin => EmptyCommandRegex().IsMatch(line),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState state) { }
+    public override void ApplyToState(PrinterState state)
+    {
+    }
 
     [GeneratedRegex("^\\s*(?:;.*)?$")]
     private static partial Regex EmptyCommandRegex();

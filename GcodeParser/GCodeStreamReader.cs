@@ -13,7 +13,6 @@ namespace GCodeParser;
 public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
     : IDisposable, IAsyncDisposable, IEnumerable<Command>, IAsyncEnumerable<Command>
 {
-    
     /// <summary>
     /// Generates a Command given a line of Gcode. Used to inject custom command parsers into the GcodeStreamReader.
     /// </summary>
@@ -23,26 +22,27 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Null if no command was recognized.
     /// </param>
     /// <returns>True if the command was recognized, false if otherwise.</returns>
-    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, [NotNullWhen(true)] out Command? command);
-    
+    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor,
+        [NotNullWhen(true)] out Command? command);
+
     private readonly StreamReader _backingStream = new(inputStream);
 
     private readonly PrinterState _printerState = new();
-    private readonly List<CustomCommandGenerator> _customCommandGenerators = new();
+    private readonly List<CustomCommandGenerator> _customCommandGenerators = [];
 
 
     /// <summary>
     /// Reads the next command in the GCode File.
     /// </summary>
     /// <returns>A Command representing the next command in a file, null if end of file is reached</returns>
-    public Command? ReadNextCommand()
+    private Command? ReadNextCommand()
     {
         string? line = _backingStream.ReadLine();
         if (line == null)
             return null;
 
         Command command = ReadLine(line);
-        
+
         command.ApplyToState(_printerState);
 
         return command;
@@ -56,17 +56,17 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
             return null;
 
         Command command = ReadLine(line);
-        
+
         command.ApplyToState(_printerState);
 
         return command;
     }
-    
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
-    
+
     /// <inheritdoc />
     public IEnumerator<Command> GetEnumerator()
     {
@@ -74,7 +74,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         while (command != null)
         {
             yield return command;
-            
+
             command = ReadNextCommand();
         }
     }
@@ -87,7 +87,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         while (command != null)
         {
             yield return command;
-            
+
             command = await ReadNextCommandAsync();
         }
     }
@@ -97,12 +97,15 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     {
         _backingStream.Dispose();
         inputStream.Dispose();
+        GC.SuppressFinalize(this);
     }
+
     /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
         _backingStream.Dispose();
         inputStream.Dispose();
+        GC.SuppressFinalize(this);
         return ValueTask.CompletedTask;
     }
 
@@ -120,14 +123,13 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     {
         _customCommandGenerators.Add(customCommandGenerator);
     }
-    
-    
+
 
     private Command ReadLine(string line)
     {
         if (EvaluateCustomCommandGenerators(line, out Command? customCommand))
             return customCommand;
-        
+
         if (LinearMoveCommand.IsCommand(line, gcodeFlavor))
             return new LinearMoveCommand(line, gcodeFlavor);
 

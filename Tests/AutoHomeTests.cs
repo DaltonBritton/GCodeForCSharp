@@ -57,7 +57,6 @@ public class AutoHomeTests
     {
         PrinterState printerState = new PrinterState();
         AutoHomeCommand command = new("G28 X L", GCodeFlavor.Marlin);
-        
     }
 
 
@@ -69,6 +68,5 @@ public class AutoHomeTests
         string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
 
         Assert.AreEqual("G28 X Y; Lets Get more danger", generated);
-
     }
 }

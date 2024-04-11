@@ -17,18 +17,18 @@ public static class Helpers
         await gcodeWriter.FlushAsync();
         memoryStream.Position = 0;
 
-        
+
         using StreamReader reader = new(memoryStream);
 
         using IEnumerator<string> expectedCommandsIterator = expectedCommands.GetEnumerator();
 
-        
+
         string? gcodeLine = await reader.ReadLineAsync();
         while (gcodeLine != null && expectedCommandsIterator.MoveNext())
         {
             string expectedLine = expectedCommandsIterator.Current;
             Assert.AreEqual(expectedLine, gcodeLine);
-            
+
             gcodeLine = await reader.ReadLineAsync();
         }
 
