@@ -81,17 +81,14 @@ public partial class LinearMoveCommand : Command
     }
 
     [Pure]
-    private double? GetExtruderMovementBasedOnPrinterState(PrinterState state, double e)
+    private static double? GetExtruderMovementBasedOnPrinterState(PrinterState state, double e)
     {
-        switch (state.AbsExtruderMode)
+        return state.AbsExtruderMode switch
         {
-            case true when !ApproxEqual(e, state.E):
-                return e - state.E;
-            case false when !ApproxEqual(e, 0):
-                return e;
-        }
-
-        return null;
+            true when !ApproxEqual(e, state.E) => e - state.E,
+            false when !ApproxEqual(e, 0) => e,
+            _ => null
+        };
     }
 
     private string GetCommandCodeFromPrinterState(PrinterState printerState)

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
 using GCodeParser;
-using GCodeParser.Commands;
 
 namespace GcodeParser.Commands;
 
@@ -47,7 +46,7 @@ public static class CommandUtils
             throw new InvalidGCode("Unsupported GCodeFlavor");
         
         IEnumerable<string> tokens = GetTokens(command);
-        HashSet<string> arguments = new();
+        HashSet<string> arguments = [];
         bool isFirst = true;
 
         foreach (var token in tokens)

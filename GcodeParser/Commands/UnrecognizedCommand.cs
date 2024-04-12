@@ -5,10 +5,12 @@
 /// </summary>
 public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
 {
+    private readonly string _command = command;
+
     /// <inheritdoc />
     public override string ToGCode(PrinterState state, GCodeFlavor gCodeFlavor)
     {
-        return command;
+        return _command;
     }
 
     /// <inheritdoc />
