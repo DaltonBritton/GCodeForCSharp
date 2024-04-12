@@ -37,38 +37,30 @@ public sealed partial class HeaterTempCommand : Command
     /// <exception cref="InvalidGCode"></exception>
     public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
-        if (command.Contains(';')) command = command[..command.IndexOf(';')];
+        Dictionary<string, double> arguments = CommandUtils.GetNumericArgumentsWithoutDuplicates(RawCommand, gcodeFlavor);
 
-        if (command.Contains('F') || command.Contains('B'))
-        {
+        if(arguments.ContainsKey("F") || arguments.ContainsKey("B"))
             throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp");
-        }
 
-        if (command.Contains('I') || command.Contains('T'))
-        {
+        if (arguments.ContainsKey("I") || arguments.ContainsKey("T"))
             throw new InvalidGCode(
                 $"Invalid HeaterTempCommand {command} - Does not support multi index bed, hot end or materials");
-        }
-
-        if (SetBedTempCommandRegex().IsMatch(command))
-        {
-            _heater = Heater.Bed;
-            if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
-        }
-        else if (SetHotEndTempCommandRegex().IsMatch(command))
-        {
+        
+        // Get Heater
+        if (SetHotEndTempCommandRegex().IsMatch(command))
             _heater = Heater.Hotend;
-            if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
-        }
+        else if (SetBedTempCommandRegex().IsMatch(command)) 
+            _heater = Heater.Bed; 
         else if (SetChamberTempCommandRegex().IsMatch(command))
-        {
             _heater = Heater.Chamber;
-            if (GetStringAfterChar('S', command, out var sValue)) _temp = float.Parse(sValue);
-        }
         else
-        {
             throw new InvalidGCode($"Invalid HeaterTempCommand {command}");
-        }
+        
+        // Get Temp
+        if (!arguments.TryGetValue("S", out double sValue))
+            throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not include a set temp argument");
+
+        _temp = (float) sValue;
     }
 
     /// <inheritdoc />
@@ -120,30 +112,6 @@ public sealed partial class HeaterTempCommand : Command
             GCodeFlavor.Marlin => SettingHeaterCommandRegex().IsMatch(command),
             _ => throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}")
         };
-    }
-
-    /// <summary>
-    /// Returns the value of the parameter that begins with the given character
-    /// </summary>
-    /// <param name="charAfter"></param>
-    /// <param name="command"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    private static bool GetStringAfterChar(char charAfter, string command, out string value)
-    {
-        if (command.Contains(charAfter))
-        {
-            int indexOfNum = command.IndexOf(charAfter) + 1;
-
-            int valueLength = command.IndexOf(' ', indexOfNum) - indexOfNum;
-            if (valueLength < 0) valueLength = command.Length - indexOfNum;
-
-            value = command.Substring(indexOfNum, valueLength);
-            return true;
-        }
-
-        value = string.Empty;
-        return false;
     }
 
     [GeneratedRegex("(^M104)|(^M140)|(^M141)")]

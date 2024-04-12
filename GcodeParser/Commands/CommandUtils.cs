@@ -39,7 +39,40 @@ public static class CommandUtils
     /// <param name="command">A single line of gcode, doesn't include any new line chars.</param>
     /// <param name="gcodeFlavor">Dictates the syntax to get arguments</param>
     /// <returns>A Dictionary containing all argument given to the <paramref name="command"/></returns>
-    /// <exception cref="InvalidGCode">Thrown if unable to get numeric value for argument or if a duplicate argument is found.</exception>
+    /// <exception cref="InvalidGCode">Thrown if unable to get numeric value for argument</exception>
+    /// <exception cref="DuplicateArgumentException">Thrown if a duplicate argument is found</exception>
+    public static HashSet<string> GetBooleanArgumentsWithoutDuplicates(string command, GCodeFlavor gcodeFlavor)
+    {
+        if (gcodeFlavor != GCodeFlavor.Marlin)
+            throw new InvalidGCode("Unsupported GCodeFlavor");
+        
+        IEnumerable<string> tokens = GetTokens(command);
+        HashSet<string> arguments = new();
+        bool isFirst = true;
+
+        foreach (var token in tokens)
+        {
+            if (isFirst)
+            {
+                isFirst = false;
+                continue;
+            }
+            
+            if(!arguments.Add(token))
+                throw new DuplicateArgumentException($"Duplicate argument {token}, in command {command}");
+        }
+
+        return arguments;
+    }
+
+    /// <summary>
+    /// Gets all arguments within a <paramref name="command"/> given the <paramref name="gcodeFlavor"/>
+    /// </summary>
+    /// <param name="command">A single line of gcode, doesn't include any new line chars.</param>
+    /// <param name="gcodeFlavor">Dictates the syntax to get arguments</param>
+    /// <returns>A Dictionary containing all argument given to the <paramref name="command"/></returns>
+    /// <exception cref="InvalidGCode">Thrown if unable to get numeric value for argument</exception>
+    /// <exception cref="DuplicateArgumentException">Thrown if a duplicate argument is found</exception>
     [Pure]
     public static Dictionary<string, double> GetNumericArgumentsWithoutDuplicates(string command,
         GCodeFlavor gcodeFlavor)
@@ -65,7 +98,7 @@ public static class CommandUtils
                     $"Unable to parse argument {argumentName}, in command {command} as a numeric value");
 
             if (!arguments.TryAdd(argumentName, argumentValue))
-                throw new InvalidGCode($"Duplicate argument {argumentName}, in command {command}");
+                throw new DuplicateArgumentException($"Duplicate argument {argumentName}, in command {command}");
         }
 
         return arguments;
