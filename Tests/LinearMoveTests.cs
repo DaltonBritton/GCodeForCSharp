@@ -1,4 +1,5 @@
-﻿using GCodeParser;
+﻿using GcodeParser;
+using GCodeParser;
 using GCodeParser.Commands;
 
 // ReSharper disable ObjectCreationAsStatement
@@ -161,7 +162,7 @@ public class LinearMoveTests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidGCode))]
+    [ExpectedException(typeof(DuplicateArgumentException))]
     public async Task TestDuplicateArgument()
     {
         await using Stream inputStream = new MemoryStream("G0 X10 X10"u8.ToArray());

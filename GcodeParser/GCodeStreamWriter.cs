@@ -85,7 +85,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         _backingStream.Flush();
     }
-    
+
     /// <inheritdoc cref="Flush"/>
     public async Task FlushAsync()
     {
@@ -98,6 +98,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         _backingStream.Dispose();
         outputStream.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     /// <inheritdoc />
@@ -105,6 +106,6 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     {
         await _backingStream.DisposeAsync();
         await outputStream.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
-    
 }
