@@ -136,7 +136,7 @@ public class LinearMoveTests
     [TestMethod]
     public async Task TestAbsPartialMovement()
     {
-        await using Stream inputStream = new MemoryStream("G0 X10 Y10 Z10 E5\nG1 X5 Y10 Z15 E5"u8.ToArray());
+        await using Stream inputStream = new MemoryStream("G90\nM82\nG0 X10 Y10 Z10 E5\nG1 X5 Y10 Z15 E5"u8.ToArray());
         GCodeStreamReader gcodeReader = new GCodeStreamReader(inputStream);
 
 

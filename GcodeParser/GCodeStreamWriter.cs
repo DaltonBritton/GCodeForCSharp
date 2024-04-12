@@ -131,5 +131,8 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
         _backingStream.WriteLine("G92 E0");
         _backingStream.WriteLine("G90");
         _backingStream.WriteLine("M83");
+        
+        _printerState.AbsMode = true;
+        _printerState.AbsExtruderMode = false;
     }
 }
