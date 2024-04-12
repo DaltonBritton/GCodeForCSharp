@@ -5,14 +5,28 @@ namespace GCodeParser;
 /// <summary>
 /// Writes GCode commands to an output stream.
 /// </summary>
-/// <param name="outputStream">The stream to write to.</param>
-/// <param name="gcodeFlavor">The flavor of gcode to write commands as.</param>
-public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
-    : IDisposable, IAsyncDisposable
+public class GCodeStreamWriter : IDisposable, IAsyncDisposable
 {
-    private readonly StreamWriter _backingStream = new(outputStream);
+    private readonly StreamWriter _backingStream;
 
     private readonly PrinterState _printerState = new();
+    private readonly Stream _outputStream;
+    private readonly GCodeFlavor _gcodeFlavor;
+
+    /// <summary>
+    /// Writes GCode commands to an output stream.
+    /// </summary>
+    /// <param name="outputStream">The stream to write to.</param>
+    /// <param name="gcodeFlavor">The flavor of gcode to write commands as.</param>
+    public GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
+    {
+        _outputStream = outputStream;
+        _gcodeFlavor = gcodeFlavor;
+        _backingStream = new(outputStream);
+
+        AddWaterMark();
+        AddStartingGCode();
+    }
 
     /// <summary>
     /// Saves a command to the output stream.
@@ -20,7 +34,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     /// <param name="command">The command to save.</param>
     public void SaveCommand(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        string gcodeLine = command.ToGCode(_printerState, _gcodeFlavor);
 
         command.ApplyToState(_printerState);
 
@@ -34,7 +48,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     /// <param name="command">The command to save.</param>
     public async ValueTask SaveCommandAsync(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, gcodeFlavor);
+        string gcodeLine = command.ToGCode(_printerState, _gcodeFlavor);
 
         command.ApplyToState(_printerState);
 
@@ -94,7 +108,7 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     public void Dispose()
     {
         _backingStream.Dispose();
-        outputStream.Dispose();
+        _outputStream.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -102,7 +116,20 @@ public class GCodeStreamWriter(Stream outputStream, GCodeFlavor gcodeFlavor = GC
     public async ValueTask DisposeAsync()
     {
         await _backingStream.DisposeAsync();
-        await outputStream.DisposeAsync();
+        await _outputStream.DisposeAsync();
         GC.SuppressFinalize(this);
+    }
+
+    private void AddWaterMark()
+    {
+        _backingStream.WriteLine("; GCode Generated/Modified by GCodeForCSharp");
+        _backingStream.WriteLine("; For More Information Visit https://github.com/DaltonBritton/GCodeForCSharp");
+    }
+
+    private void AddStartingGCode()
+    {
+        _backingStream.WriteLine("G92 E0");
+        _backingStream.WriteLine("G90");
+        _backingStream.WriteLine("M83");
     }
 }

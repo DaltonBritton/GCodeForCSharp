@@ -20,6 +20,18 @@ public static class Helpers
 
         using StreamReader reader = new(memoryStream);
 
+
+        // Starting GCode
+        expectedCommands =
+        [
+            "; GCode Generated/Modified by GCodeForCSharp",
+            "; For More Information Visit https://github.com/DaltonBritton/GCodeForCSharp",
+            "G92 E0",
+            "G90",
+            "M83",
+            ..expectedCommands,
+        ];
+        
         using IEnumerator<string> expectedCommandsIterator = expectedCommands.GetEnumerator();
 
 
