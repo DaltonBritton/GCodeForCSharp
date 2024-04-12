@@ -23,9 +23,6 @@ public static class DotTexture
         [
             new UnrecognizedCommand("M104 S210", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G28", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("G90", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M82", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin),
             new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin),
             new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: supportingRingLayerHeight, f: 3600)
         ];
