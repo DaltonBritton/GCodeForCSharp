@@ -64,38 +64,31 @@ public sealed partial class AutoHomeCommand : Command
     /// <exception cref="InvalidGCode"></exception>
     public AutoHomeCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
     {
-        if (command.Contains(';'))
-        {
-            command = command[..command.IndexOf(';')];
-        }
-
         if (GCodeFlavor.Marlin != gcodeFlavor) throw new InvalidGCode($"Unsupported GCode flavor {gcodeFlavor}");
 
-        if (!AutoHomeRegex().IsMatch(command))
+        if (!AutoHomeRegex().IsMatch(RawCommand))
         {
             throw new InvalidGCode($"Invalid Auto Home Command {command}");
         }
 
-        if (command.Contains('L') || command.Contains('O') || command.Contains('R'))
-        {
+        HashSet<string> arguments = CommandUtils.GetBooleanArgumentsWithoutDuplicates(RawCommand, gcodeFlavor);
+        
+        
+        if (arguments.Contains("L") || arguments.Contains("O") || arguments.Contains("R"))
             throw new InvalidGCode($"Unsupported Auto Home Command {command}");
-        }
-
-
-        if (command.Contains('X'))
-        {
+        
+        
+        if (arguments.Remove("X"))
             _axes[Axis.X] = true;
-        }
 
-        if (command.Contains('Y'))
-        {
+        if (arguments.Remove("Y"))
             _axes[Axis.Y] = true;
-        }
 
-        if (command.Contains('Z'))
-        {
+        if (arguments.Remove("Z")) 
             _axes[Axis.Z] = true;
-        }
+
+        if (arguments.Count != 0)
+            throw new InvalidGCode($"Unexpected Argument in command {command}");
     }
 
     /// <inheritdoc/>

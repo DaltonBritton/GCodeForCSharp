@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.Contracts;
 using System.Text;
 using System.Text.RegularExpressions;
+using GcodeParser;
 using GcodeParser.Commands;
 
 namespace GCodeParser.Commands;
@@ -54,17 +55,7 @@ public partial class LinearMoveCommand : Command
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
 
 
-        string gcode;
-        if (_e != null)
-        {
-            if ((state.AbsExtruderMode && !ApproxEqual((double)_e, state.E)) ||
-                (!state.AbsExtruderMode && !ApproxEqual((double)_e, 0)))
-                gcode = "G1";
-            else
-                gcode = "G0";
-        }
-        else
-            gcode = "G0";
+        string gcode = GetCommandCodeFromPrinterState(state);
 
         StringBuilder builder = new(gcode);
 
@@ -75,15 +66,9 @@ public partial class LinearMoveCommand : Command
 
         if (_e != null)
         {
-            switch (state.AbsExtruderMode)
-            {
-                case true when !ApproxEqual((double)_e, state.E):
-                    builder.Append($" E{_e - state.E}");
-                    break;
-                case false when !ApproxEqual((double)_e, 0):
-                    builder.Append($" E{_e}");
-                    break;
-            }
+            double? extruderMovement = GetExtruderMovementBasedOnPrinterState(state, (double)_e);
+            if (extruderMovement != null)
+                builder.Append($" E{extruderMovement}");
         }
 
         string commandString = builder.ToString();
@@ -93,6 +78,37 @@ public partial class LinearMoveCommand : Command
         commandString = AddInlineComment(commandString, gcodeFlavor);
 
         return commandString;
+    }
+
+    [Pure]
+    private double? GetExtruderMovementBasedOnPrinterState(PrinterState state, double e)
+    {
+        switch (state.AbsExtruderMode)
+        {
+            case true when !ApproxEqual(e, state.E):
+                return e - state.E;
+            case false when !ApproxEqual(e, 0):
+                return e;
+        }
+
+        return null;
+    }
+
+    private string GetCommandCodeFromPrinterState(PrinterState printerState)
+    {
+        string gcode;
+        if (_e != null)
+        {
+            if ((printerState.AbsExtruderMode && !ApproxEqual((double)_e, printerState.E)) ||
+                (!printerState.AbsExtruderMode && !ApproxEqual((double)_e, 0)))
+                gcode = "G1";
+            else
+                gcode = "G0";
+        }
+        else
+            gcode = "G0";
+
+        return gcode;
     }
 
     /// <inheritdoc />
