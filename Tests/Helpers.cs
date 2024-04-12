@@ -16,12 +16,17 @@ public static class Helpers
 
         await gcodeWriter.FlushAsync();
         memoryStream.Position = 0;
+        
+        var expectedCommandsIterator = AddStartedCommand(expectedCommands);
 
+        foreach (var (expectedLine, actualLine) in expectedCommandsIterator.Zip(GetLines(memoryStream)))
+        {
+            Assert.AreEqual(expectedLine, actualLine);
+        }
+    }
 
-        using StreamReader reader = new(memoryStream);
-
-
-        // Starting GCode
+    private static IEnumerable<string> AddStartedCommand(IEnumerable<string> expectedCommands)
+    {
         expectedCommands =
         [
             "; GCode Generated/Modified by GCodeForCSharp",
@@ -31,20 +36,21 @@ public static class Helpers
             "M83",
             ..expectedCommands,
         ];
-        
-        using IEnumerator<string> expectedCommandsIterator = expectedCommands.GetEnumerator();
 
+        return expectedCommands;
+    }
 
-        string? gcodeLine = await reader.ReadLineAsync();
-        while (gcodeLine != null && expectedCommandsIterator.MoveNext())
+    private static IEnumerable<string> GetLines(Stream stream)
+    {
+        StreamReader reader = new(stream);
+
+        string? line = reader.ReadLine();
+
+        while (line != null)
         {
-            string expectedLine = expectedCommandsIterator.Current;
-            Assert.AreEqual(expectedLine, gcodeLine);
-
-            gcodeLine = await reader.ReadLineAsync();
+            yield return line;
+            
+            line = reader.ReadLine();
         }
-
-        Assert.IsNull(gcodeLine);
-        Assert.IsFalse(expectedCommandsIterator.MoveNext());
     }
 }
