@@ -41,7 +41,9 @@ public static class VariableInfill
         }
 
         public override void ApplyToState(PrinterState state)
-        { }
+        {
+            state["LineType"] = LineType;
+        }
     }
 
     public static void VariableInfillParser(GCodeStreamReader gcodeReader, GCodeStreamWriter gcodeWriter, float stepSize)
@@ -50,21 +52,23 @@ public static class VariableInfill
         gcodeReader.AddCustomGCodeParser(LineTypeCommand.LineTypeCommandGenerator);
 
         GCodeStreamWriter tempWriter = new GCodeStreamWriter(new MemoryStream());
-
-        string lineType = "Custom";
+        
         List<Line> perimeters = new();
 
         float totalExtruded = 0;
         
         gcodeWriter.SaveCommand(new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin));
         gcodeWriter.SaveCommand(new UnrecognizedCommand("M82", GCodeFlavor.Marlin));
+
+        PrinterState printerState = gcodeReader.PrinterState;
+        printerState["LineType"] = string.Empty;
         
         // Read Commands
         foreach (var cmd in gcodeReader)
         {
             Command command = cmd;
             
-            if (lineType == "Perimeter" && command is LinearMoveCommand linearMoveCommand)
+            if ((string) printerState["LineType"] == "Perimeter" && command is LinearMoveCommand linearMoveCommand)
             {
                 if (linearMoveCommand.E != null)
                     totalExtruded += (float) linearMoveCommand.E;
@@ -94,7 +98,7 @@ public static class VariableInfill
                 continue;
             }
             
-            if (lineType == "Internal infill" && command is LinearMoveCommand internalInfill)
+            if ((string) printerState["LineType"] == "Internal infill" && command is LinearMoveCommand internalInfill)
             {
                 Vector3 lineStart = new()
                 {
@@ -155,8 +159,8 @@ public static class VariableInfill
             
             if(command is LineTypeCommand lineTypeCommand)
             {
-                lineType = lineTypeCommand.LineType;
-                if(lineType == "Perimeter")
+                printerState["LineType"] = lineTypeCommand.LineType;
+                if((string) printerState["LineType"] == "Perimeter")
                     perimeters.Clear();
             }
             

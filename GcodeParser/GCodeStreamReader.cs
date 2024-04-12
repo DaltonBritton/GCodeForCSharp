@@ -27,7 +27,10 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
 
     private readonly StreamReader _backingStream = new(inputStream);
 
-    private readonly PrinterState _printerState = new();
+    /// <summary>
+    /// Reflects the current state of the printer
+    /// </summary>
+    public readonly PrinterState PrinterState = new();
     private readonly List<CustomCommandGenerator> _customCommandGenerators = [];
 
 
@@ -43,7 +46,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
 
         Command command = ReadLine(line);
 
-        command.ApplyToState(_printerState);
+        command.ApplyToState(PrinterState);
 
         return command;
     }
@@ -57,7 +60,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
 
         Command command = ReadLine(line);
 
-        command.ApplyToState(_printerState);
+        command.ApplyToState(PrinterState);
 
         return command;
     }
