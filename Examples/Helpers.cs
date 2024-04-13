@@ -21,23 +21,22 @@ public static class Helpers
 
         float extruderMovement = GetExtrudeDistFromVolume(lineVolume, filamentDiameter);
         
-        LinearMoveCommand command = new(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, extruderMovement);
+        LinearMoveCommand command = new(x: movePosition.X, y: movePosition.Y, z: movePosition.Z, extruderMovement, f: 60*60);
         gcodeWriter.SaveCommand(command);
     }
 
-    public static void DrawDot(GCodeStreamWriter gcodeWriter,  float filamentDiameter, float dotDiameter, float dotHeight, Vector3 dotLocation, ref float totalExtruded)
+    public static void DrawDot(GCodeStreamWriter gcodeWriter,  float filamentDiameter, float dotDiameter, float dotHeight, Vector3 dotLocation)
     {
         float dotRadius = dotDiameter / 2;
         float dotVolume = float.Pi * (dotRadius * dotRadius) * dotHeight;
 
         float extruderMovement = GetExtrudeDistFromVolume(dotVolume, filamentDiameter);
-        totalExtruded += extruderMovement;
         
         // Move to position to extrude
-        gcodeWriter.SaveCommand(new LinearMoveCommand(dotLocation.X, dotLocation.Y, dotLocation.Z));
+        gcodeWriter.SaveCommand(new LinearMoveCommand(dotLocation.X, dotLocation.Y, dotLocation.Z, f: 60*60));
         
         // Extrude
-        gcodeWriter.SaveCommand(new LinearMoveCommand(e: totalExtruded));
+        gcodeWriter.SaveCommand(new LinearMoveCommand(e: extruderMovement, f: 10*60));
     }
 
     public static void DrawCircle(GCodeStreamWriter gcodeWriter, float radius, float currentHeight, float layerHeight, float lineWidth, float filamentDiameter, Vector2 center, float startAngle = 0,

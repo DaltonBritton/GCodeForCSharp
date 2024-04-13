@@ -22,7 +22,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Null if no command was recognized.
     /// </param>
     /// <returns>True if the command was recognized, false if otherwise.</returns>
-    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor,
+    public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, PrinterState printerState,
         [NotNullWhen(true)] out Command? command);
 
     private readonly StreamReader _backingStream = new(inputStream);
@@ -38,7 +38,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Reads the next command in the GCode File.
     /// </summary>
     /// <returns>A Command representing the next command in a file, null if end of file is reached</returns>
-    private Command? ReadNextCommand()
+    public Command? ReadNextCommand()
     {
         string? line = _backingStream.ReadLine();
         if (line == null)
@@ -155,7 +155,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     {
         foreach (var customCommandGenerator in _customCommandGenerators)
         {
-            if (customCommandGenerator(gcodeLine, gcodeFlavor, out command))
+            if (customCommandGenerator(gcodeLine, gcodeFlavor, PrinterState, out command))
                 return true;
         }
 

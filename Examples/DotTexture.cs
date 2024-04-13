@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
+using GcodeParser;
 using GCodeParser;
+using GcodeParser.Commands;
 using GCodeParser.Commands;
 
 namespace Examples;
@@ -17,18 +19,18 @@ public static class DotTexture
 
         float currentHeight = supportingRingLayerHeight;
         float currentAngle = 0;
-        float totalExtruded = 0;
-        
+
         List<Command> commands =
         [
-            new UnrecognizedCommand("M104 S210", GCodeFlavor.Marlin),
+            new HeaterTempCommand(180, Heater.Hotend),
+            new HeaterTempCommand(60, Heater.Bed),
             new UnrecognizedCommand("G28", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M109 S210", GCodeFlavor.Marlin),
             new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: supportingRingLayerHeight, f: 3600)
         ];
         gcodeWriter.SaveCommands(commands);
 
-        
+        gcodeWriter.PrinterState.AbsExtruderMode = false;
+
         // Create Starting movement to wipe nozzle
         Vector3 linePos = new(offset.X, offset.Y+ 10, supportingRingLayerHeight);
         Helpers.FillLine(gcodeWriter, linePos, supportingRingLayerHeight, dotDiameter, filamentDiameter);
@@ -56,7 +58,7 @@ public static class DotTexture
 
                 Vector3 dotPos = new(circleOutline2D, currentHeight);
                 
-                Helpers.DrawDot(gcodeWriter, filamentDiameter, dotDiameter, layerHeight, dotPos, ref totalExtruded);
+                Helpers.DrawDot(gcodeWriter, filamentDiameter, dotDiameter, layerHeight, dotPos);
                 
                 currentAngle += angleStep;
             }
@@ -74,5 +76,11 @@ public static class DotTexture
         }
         
         gcodeWriter.SaveCommand(new LinearMoveCommand(z: currentHeight + 30));
+    }
+
+
+    public static void Texturize(PrusaSlicerParser gcodeReader, GCodeStreamWriter gcodeWriter)
+    {
+        
     }
 }

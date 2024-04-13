@@ -15,8 +15,9 @@ GCodeStreamWriter gcodeWriter = new(debugStream);
 
 // DotTexture.CircleOutline(gcodeWriter, 25, 30, 0.75f, 1.75f, offset: new(100, 100));
 
-GCodeStreamReader gcodeReader =
+PrusaSlicerParser gcodeReader =
     new(File.OpenRead("C:/Users/unada/Downloads/Shape-Box_27m_0.20mm_210C_PLA_ENDER3.gcode"));
+
 
 VariableInfill.VariableInfillParser(gcodeReader, gcodeWriter, 0.5f);
 

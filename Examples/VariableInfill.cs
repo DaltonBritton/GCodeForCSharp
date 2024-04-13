@@ -14,43 +14,10 @@ public static class VariableInfill
         public readonly Vector3 LineEnd = lineEnd;
     }
 
-    private class LineTypeCommand : Command
+    
+
+    public static void VariableInfillParser(PrusaSlicerParser gcodeReader, GCodeStreamWriter gcodeWriter, float stepSize)
     {
-        public readonly string LineType;
-        public static bool LineTypeCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor,
-            [NotNullWhen(true)] out Command? command)
-        {
-            command = null;
-            if (!Regex.IsMatch(gcodeLine, "^;TYPE:.+$"))
-                return false;
-
-            string lineType = gcodeLine.Replace(";TYPE:", "");
-
-            command = new LineTypeCommand(lineType);
-            return true;
-        }
-
-        private LineTypeCommand(string lineType)
-        {
-            LineType = lineType;
-        }
-        
-        public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
-        {
-            return ";TYPE:" + LineType;
-        }
-
-        public override void ApplyToState(PrinterState state)
-        {
-            state["LineType"] = LineType;
-        }
-    }
-
-    public static void VariableInfillParser(GCodeStreamReader gcodeReader, GCodeStreamWriter gcodeWriter, float stepSize)
-    {
-        // Inject custom parser
-        gcodeReader.AddCustomGCodeParser(LineTypeCommand.LineTypeCommandGenerator);
-
         GCodeStreamWriter tempWriter = new GCodeStreamWriter(new MemoryStream());
         
         List<Line> perimeters = new();
@@ -68,13 +35,13 @@ public static class VariableInfill
         {
             Command command = cmd;
             
-            if ((string) printerState["LineType"] == "Perimeter" && command is LinearMoveCommand linearMoveCommand)
+            if (command is PerimeterCommand perimeterCommand)
             {
-                if (linearMoveCommand.E != null)
-                    totalExtruded += (float) linearMoveCommand.E;
+                if (perimeterCommand.E != null)
+                    totalExtruded += (float) perimeterCommand.E;
                 
-                command = new LinearMoveCommand(x: linearMoveCommand.X, y: linearMoveCommand.Y,
-                    z: linearMoveCommand.Z, e: totalExtruded, f: linearMoveCommand.F);
+                command = new LinearMoveCommand(x: perimeterCommand.X, y: perimeterCommand.Y,
+                    z: perimeterCommand.Z, e: totalExtruded, f: perimeterCommand.F);
                 
                 Vector3 lineStart = new()
                 {
@@ -98,7 +65,7 @@ public static class VariableInfill
                 continue;
             }
             
-            if ((string) printerState["LineType"] == "Internal infill" && command is LinearMoveCommand internalInfill)
+            if (command is InternalInfillCommand internalInfill)
             {
                 Vector3 lineStart = new()
                 {
