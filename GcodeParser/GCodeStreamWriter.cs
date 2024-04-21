@@ -9,7 +9,6 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
 {
     private readonly StreamWriter _backingStream;
 
-    private readonly PrinterState _printerState = new();
     private readonly Stream _outputStream;
     private readonly GCodeFlavor _gcodeFlavor;
 
@@ -27,6 +26,10 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
         AddWaterMark();
         AddStartingGCode();
     }
+    /// <summary>
+    /// The Current State of the printer given all commands provided to the GCodeStreamWriter
+    /// </summary>
+    public readonly PrinterState PrinterState = new();
 
     /// <summary>
     /// Saves a command to the output stream.
@@ -34,11 +37,11 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// <param name="command">The command to save.</param>
     public void SaveCommand(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, _gcodeFlavor);
+        string gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor);
 
-        command.ApplyToState(_printerState);
-
-        if (gcodeLine != string.Empty)
+        command.ApplyToState(PrinterState);
+        
+        if(gcodeLine != string.Empty)
             _backingStream.WriteLine(gcodeLine);
     }
 
@@ -48,11 +51,11 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// <param name="command">The command to save.</param>
     public async ValueTask SaveCommandAsync(Command command)
     {
-        string gcodeLine = command.ToGCode(_printerState, _gcodeFlavor);
-
-        command.ApplyToState(_printerState);
-
-        if (gcodeLine != string.Empty)
+        string gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor);
+        
+        command.ApplyToState(PrinterState);
+        
+        if(gcodeLine != string.Empty)
             await _backingStream.WriteLineAsync(gcodeLine);
     }
 
@@ -129,7 +132,11 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     private void AddStartingGCode()
     {
         _backingStream.WriteLine("G92 E0");
+        
+        PrinterState.AbsMode = true;
         _backingStream.WriteLine("G90");
+
+        PrinterState.AbsExtruderMode = false;
         _backingStream.WriteLine("M83");
         
         _printerState.AbsMode = true;

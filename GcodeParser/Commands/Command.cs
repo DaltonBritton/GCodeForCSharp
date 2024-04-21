@@ -2,8 +2,6 @@
 
 namespace GCodeParser.Commands;
 
-
-
 /// <summary>
 /// Base class for all gcode commands.
 /// Represents a single line of gcode or a single gcode command
