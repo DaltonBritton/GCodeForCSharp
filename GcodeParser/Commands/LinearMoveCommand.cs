@@ -11,11 +11,11 @@ namespace GCodeParser.Commands;
 /// </summary>
 public partial class LinearMoveCommand : Command
 {
-    private double? _e;
-    private double? _f;
-    private double? _x;
-    private double? _y;
-    private double? _z;
+    public double? E { get; private set; }
+    public double? F { get; private set; }
+    public double? X { get; private set; }
+    public double? Y { get; private set; }
+    public double? Z { get; private set; }
 
     /// <summary>
     /// Creates a new Linear Move Command from the GCode representation of the command.
@@ -41,11 +41,11 @@ public partial class LinearMoveCommand : Command
     public LinearMoveCommand(double? x = null, double? y = null, double? z = null,
         double? e = null, double? f = null)
     {
-        _f = f;
-        _x = x;
-        _y = y;
-        _z = z;
-        _e = e;
+        F = f;
+        X = x;
+        Y = y;
+        Z = z;
+        E = e;
     }
 
     /// <inheritdoc />
@@ -59,14 +59,14 @@ public partial class LinearMoveCommand : Command
 
         StringBuilder builder = new(gcode);
 
-        WriteArgumentToGCode(builder, "X", _x, state.X, state.AbsMode);
-        WriteArgumentToGCode(builder, "Y", _y, state.Y, state.AbsMode);
-        WriteArgumentToGCode(builder, "Z", _z, state.Z, state.AbsMode);
-        WriteArgumentToGCode(builder, "F", _f, state.F, true);
+        WriteArgumentToGCode(builder, "X", X, state.X, state.AbsMode);
+        WriteArgumentToGCode(builder, "Y", Y, state.Y, state.AbsMode);
+        WriteArgumentToGCode(builder, "Z", Z, state.Z, state.AbsMode);
+        WriteArgumentToGCode(builder, "F", F, state.F, true);
 
-        if (_e != null)
+        if (E != null)
         {
-            double? extruderMovement = GetExtruderMovementBasedOnPrinterState(state, (double)_e);
+            double? extruderMovement = GetExtruderMovementBasedOnPrinterState(state, (double)E);
             if (extruderMovement != null)
                 builder.Append($" E{extruderMovement}");
         }
@@ -94,10 +94,10 @@ public partial class LinearMoveCommand : Command
     private string GetCommandCodeFromPrinterState(PrinterState printerState)
     {
         string gcode;
-        if (_e != null)
+        if (E != null)
         {
-            if ((printerState.AbsExtruderMode && !ApproxEqual((double)_e, printerState.E)) ||
-                (!printerState.AbsExtruderMode && !ApproxEqual((double)_e, 0)))
+            if ((printerState.AbsExtruderMode && !ApproxEqual((double)E, printerState.E)) ||
+                (!printerState.AbsExtruderMode && !ApproxEqual((double)E, 0)))
                 gcode = "G1";
             else
                 gcode = "G0";
@@ -111,20 +111,20 @@ public partial class LinearMoveCommand : Command
     /// <inheritdoc />
     public override void ApplyToState(PrinterState printerState)
     {
-        if (_x != null)
-            printerState.X = (double)_x;
+        if (X != null)
+            printerState.X = (double) X;
 
-        if (_y != null)
-            printerState.Y = (double)_y;
+        if (Y != null)
+            printerState.Y = (double) Y;
 
-        if (_z != null)
-            printerState.Z = (double)_z;
+        if (Z != null)
+            printerState.Z = (double) Z;
 
-        if (_e != null)
-            printerState.E = (double)_e;
+        if (E != null)
+            printerState.E = (double) E;
 
-        if (_f != null)
-            printerState.F = (double)_f;
+        if (F != null)
+            printerState.F = (double) F;
     }
 
 
@@ -151,15 +151,15 @@ public partial class LinearMoveCommand : Command
             CommandUtils.GetNumericArgumentsWithoutDuplicates(command, GCodeFlavor.Marlin);
 
         if (arguments.Remove("X", out var argumentValue))
-            _x = argumentValue;
+            X = argumentValue;
         if (arguments.Remove("Y", out argumentValue))
-            _y = argumentValue;
+            Y = argumentValue;
         if (arguments.Remove("Z", out argumentValue))
-            _z = argumentValue;
+            Z = argumentValue;
         if (arguments.Remove("E", out argumentValue))
-            _e = argumentValue;
+            E = argumentValue;
         if (arguments.Remove("F", out argumentValue))
-            _f = argumentValue;
+            F = argumentValue;
 
         if (arguments.Count != 0)
             throw new InvalidGCode($"Unexpected Arguments in {command}");
