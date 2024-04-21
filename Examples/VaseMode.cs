@@ -8,7 +8,7 @@ namespace Examples;
 public static class VaseMode
 {
 
-    public static void SpiralVase(GCodeStreamWriter gcodeWriter, float layerHeight, float lineWidth, float filamentDiameter, float radius, float vaseHeight, float textureFrequency,
+    public static void SpiralVase(GCodeStreamWriter gcodeWriter, float layerHeight, float lineWidth, float filamentDiameter, int printTemp, float radius, float vaseHeight, float textureFrequency,
         float textureAmplitude, float resolution = 2.03f*float.Pi/100, int rotationsPerLayer = 1)
     {
         float currentHeight = layerHeight;
@@ -18,15 +18,11 @@ public static class VaseMode
         
         Vector2 offset = new Vector2(radius+textureAmplitude, radius+textureAmplitude) * 1.25f;
 
-
         List<Command> commands =
         [
-            new UnrecognizedCommand("M104 S210", GCodeFlavor.Marlin),
+            new UnrecognizedCommand($"M104 S{printTemp}", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G28", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("G90", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M82", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("G92 E0", GCodeFlavor.Marlin),
-            new UnrecognizedCommand("M109 S180", GCodeFlavor.Marlin),
+            new UnrecognizedCommand($"M109 S{printTemp}", GCodeFlavor.Marlin),
             new LinearMoveCommand(x: offset.X+10, y: offset.Y+10, z: currentHeight)
         ];
 

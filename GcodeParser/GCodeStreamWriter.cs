@@ -9,7 +9,6 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
 {
     private readonly StreamWriter _backingStream;
 
-    private readonly PrinterState _printerState = new();
     private readonly Stream _outputStream;
     private readonly GCodeFlavor _gcodeFlavor;
 
@@ -133,7 +132,11 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     private void AddStartingGCode()
     {
         _backingStream.WriteLine("G92 E0");
+        
+        PrinterState.AbsMode = true;
         _backingStream.WriteLine("G90");
+
+        PrinterState.AbsExtruderMode = false;
         _backingStream.WriteLine("M83");
     }
 }
