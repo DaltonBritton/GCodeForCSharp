@@ -35,7 +35,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves a command to the output stream.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public void SaveCommand(ICommand command)
+    public virtual void SaveCommand(ICommand command)
     {
         Span<char> buffer = stackalloc char[500];
         ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
@@ -51,7 +51,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Do to high frequency of linear move commands this method exists to prevent boxing allocations and improve preformace.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public void SaveCommand(LinearMoveCommand command)
+    public virtual void SaveCommand(LinearMoveCommand command)
     {
         Span<char> buffer = stackalloc char[500];
         ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
@@ -66,7 +66,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves a command to the output stream Asynchronously.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public async ValueTask SaveCommandAsync(ICommand command)
+    public virtual async ValueTask SaveCommandAsync(ICommand command)
     {
         string gcodeLine = GetGCodeAsString(command);
         
@@ -81,7 +81,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Do to high frequency of linear move commands this method exists to prevent boxing allocations and improve preformace.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public async ValueTask SaveCommandAsync(LinearMoveCommand command)
+    public virtual async ValueTask SaveCommandAsync(LinearMoveCommand command)
     {
         string gcodeLine = GetGCodeAsString(command);
         

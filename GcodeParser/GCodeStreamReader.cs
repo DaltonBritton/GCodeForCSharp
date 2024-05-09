@@ -38,7 +38,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Reads the next command in the GCode File.
     /// </summary>
     /// <returns>A Command representing the next command in a file, null if end of file is reached</returns>
-    public ICommand? ReadNextCommand()
+    public virtual ICommand? ReadNextCommand()
     {
         string? line = _backingStream.ReadLine();
         if (line == null)
@@ -52,7 +52,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     }
 
     /// <inheritdoc cref="ReadNextCommand"/>
-    public async Task<ICommand?> ReadNextCommandAsync()
+    public virtual async Task<ICommand?> ReadNextCommandAsync()
     {
         string? line = await _backingStream.ReadLineAsync();
         if (line == null)
