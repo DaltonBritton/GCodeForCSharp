@@ -12,7 +12,7 @@ namespace GCodeParser.Commands;
 ///     This produces different but equivalent gcode where there exists no AbsMovementMode Command.
 ///     This is done to simplify the number of edge cases.
 /// </summary>
-public sealed partial class AbsMovementMode : Command
+public partial struct AbsMovementMode : ICommand
 {
     private readonly bool _isAbs;
     private readonly bool _extruderOnly;
@@ -24,8 +24,7 @@ public sealed partial class AbsMovementMode : Command
     /// <param name="extruderOnly"></param>
     /// <param name="inlineComment"></param>
     /// <exception cref="InvalidGCode">Thrown if unable to parse line.</exception>
-    public AbsMovementMode(bool isAbs, bool extruderOnly = false, string inlineComment = "") : base($";{inlineComment}",
-        GCodeFlavor.Marlin)
+    public AbsMovementMode(bool isAbs, bool extruderOnly = false)
     {
         _isAbs = isAbs;
         _extruderOnly = extruderOnly;
@@ -37,7 +36,7 @@ public sealed partial class AbsMovementMode : Command
     /// <param name="command">A single line of gcode containing the Absolute Movement Mode Command. Shouldn't contain any newline characters</param>
     /// <param name="gcodeFlavor">Dictates the syntax used to parse the Absolute Movement Mode Command</param>
     /// <exception cref="InvalidGCode">Thrown if unable to parse line.</exception>
-    public AbsMovementMode(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
+    public AbsMovementMode(string command, GCodeFlavor gcodeFlavor)
     {
         _extruderOnly = false;
         if (SetAbsCommandRegex().IsMatch(command))
@@ -59,13 +58,13 @@ public sealed partial class AbsMovementMode : Command
     }
 
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gcodeFlavor, Span<char> buffer)
     {
-        return AddInlineComment(string.Empty, gcodeFlavor);
+        return ReadOnlySpan<char>.Empty;
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState state)
+    public void ApplyToState(PrinterState state)
     {
         if (_extruderOnly)
             state.AbsExtruderMode = _isAbs;

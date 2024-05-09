@@ -10,22 +10,23 @@ namespace Tests;
 public class LinearMoveTests
 {
     [TestMethod]
-    public async Task TestLinearMove()
+    public void TestLinearMove()
     {
-        await using Stream inputStream = new MemoryStream("G0 X5"u8.ToArray());
+        using Stream inputStream = new MemoryStream("G0 X5"u8.ToArray());
 
-        await using GCodeStreamReader gcodeReader = new GCodeStreamReader(inputStream);
+        using GCodeStreamReader gcodeReader = new GCodeStreamReader(inputStream);
 
-        List<Command> commands = new();
-        await foreach (Command command in gcodeReader)
+        List<ICommand> commands = new();
+        foreach (ICommand command in gcodeReader)
         {
             commands.Add(command);
         }
 
         PrinterState printerState = new();
+        Span<char> buffer = new char[100];
 
         Assert.AreEqual(1, commands.Count);
-        Assert.AreEqual("G0 X5", commands[0].ToGCode(printerState, GCodeFlavor.Marlin));
+        Assert.AreEqual("G0 X5", commands[0].ToGCode(printerState, GCodeFlavor.Marlin, buffer).ToString());
     }
 
     [TestMethod]

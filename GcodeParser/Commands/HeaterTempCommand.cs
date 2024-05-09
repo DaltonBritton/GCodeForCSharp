@@ -12,7 +12,7 @@ namespace GcodeParser.Commands;
 /// 
 /// Does not handle auto temp or multi index heating elements, or material settings. 
 /// </summary>
-public sealed partial class HeaterTempCommand : Command
+public partial struct HeaterTempCommand : ICommand
 {
     private readonly float _temp;
     private readonly Heater _heater;
@@ -35,9 +35,11 @@ public sealed partial class HeaterTempCommand : Command
     /// <param name="command"></param>
     /// <param name="gcodeFlavor"></param>
     /// <exception cref="InvalidGCode"></exception>
-    public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
+    public HeaterTempCommand(string command, GCodeFlavor gcodeFlavor)
     {
-        Dictionary<string, double> arguments = CommandUtils.GetNumericArgumentsWithoutDuplicates(RawCommand, gcodeFlavor);
+        ReadOnlySpan<char> rawCommand = ICommand.GetRawCommand(command, gcodeFlavor);
+        
+        Dictionary<string, double> arguments = CommandUtils.GetNumericArgumentsWithoutDuplicates(rawCommand.ToString(), gcodeFlavor);
 
         if(arguments.ContainsKey("F") || arguments.ContainsKey("B"))
             throw new InvalidGCode($"Invalid HeaterTempCommand {command} - Does not support auto temp");
@@ -64,7 +66,7 @@ public sealed partial class HeaterTempCommand : Command
     }
 
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gcodeFlavor, Span<char> buffer)
     {
         string commandStart = _heater switch
         {
@@ -73,14 +75,14 @@ public sealed partial class HeaterTempCommand : Command
             Heater.Hotend => "M104",
             _ => throw new ArgumentOutOfRangeException($"Unexpected Heater {_heater}")
         };
-
+        
         string command = $"{commandStart} S{_temp}";
 
-        return AddInlineComment(command, gcodeFlavor);
+        return command;
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState state)
+    public void ApplyToState(PrinterState state)
     {
         switch (_heater)
         {

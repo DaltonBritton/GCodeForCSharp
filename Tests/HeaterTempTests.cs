@@ -13,7 +13,9 @@ public class HeaterTempTests
     {
         PrinterState printerState = new PrinterState();
         HeaterTempCommand command = new(97.7f, Heater.Bed);
-        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
+        
+        Span<char> buffer = stackalloc char[100];
+        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin, buffer).ToString();
 
         Assert.AreEqual("M140 S97.7", generated);
     }
@@ -23,7 +25,9 @@ public class HeaterTempTests
     {
         PrinterState printerState = new PrinterState();
         HeaterTempCommand command = new("M140 S97.7", GCodeFlavor.Marlin);
-        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin);
+        
+        Span<char> buffer = stackalloc char[100];
+        string generated = command.ToGCode(printerState, GCodeFlavor.Marlin, buffer).ToString();
 
         Assert.AreEqual("M140 S97.7", generated);
     }

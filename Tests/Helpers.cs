@@ -5,7 +5,7 @@ namespace Tests;
 
 public static class Helpers
 {
-    public static async ValueTask AssertCommandsEqual(IAsyncEnumerable<Command> gcodeFile,
+    public static async ValueTask AssertCommandsEqual(IAsyncEnumerable<ICommand> gcodeFile,
         IEnumerable<string> expectedCommands)
     {
         MemoryStream memoryStream = new MemoryStream();

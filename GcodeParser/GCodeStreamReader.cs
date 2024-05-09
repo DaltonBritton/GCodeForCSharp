@@ -11,7 +11,7 @@ namespace GCodeParser;
 /// <param name="inputStream">The stream to read from</param>
 /// <param name="gcodeFlavor">The expected flavor of the gcode.</param>
 public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCodeFlavor.Marlin)
-    : IDisposable, IAsyncDisposable, IEnumerable<Command>, IAsyncEnumerable<Command>
+    : IDisposable, IAsyncDisposable, IEnumerable<ICommand>, IAsyncEnumerable<ICommand>
 {
     /// <summary>
     /// Generates a Command given a line of Gcode. Used to inject custom command parsers into the GcodeStreamReader.
@@ -23,7 +23,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// </param>
     /// <returns>True if the command was recognized, false if otherwise.</returns>
     public delegate bool CustomCommandGenerator(string gcodeLine, GCodeFlavor gcodeFlavor, PrinterState printerState,
-        [NotNullWhen(true)] out Command? command);
+        [NotNullWhen(true)] out ICommand? command);
 
     private readonly StreamReader _backingStream = new(inputStream);
 
@@ -38,13 +38,13 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     /// Reads the next command in the GCode File.
     /// </summary>
     /// <returns>A Command representing the next command in a file, null if end of file is reached</returns>
-    public Command? ReadNextCommand()
+    public ICommand? ReadNextCommand()
     {
         string? line = _backingStream.ReadLine();
         if (line == null)
             return null;
 
-        Command command = ReadLine(line);
+        ICommand command = ReadLine(line);
 
         command.ApplyToState(PrinterState);
 
@@ -52,13 +52,13 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     }
 
     /// <inheritdoc cref="ReadNextCommand"/>
-    public async Task<Command?> ReadNextCommandAsync()
+    public async Task<ICommand?> ReadNextCommandAsync()
     {
         string? line = await _backingStream.ReadLineAsync();
         if (line == null)
             return null;
 
-        Command command = ReadLine(line);
+        ICommand command = ReadLine(line);
 
         command.ApplyToState(PrinterState);
 
@@ -71,9 +71,9 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     }
 
     /// <inheritdoc />
-    public IEnumerator<Command> GetEnumerator()
+    public IEnumerator<ICommand> GetEnumerator()
     {
-        Command? command = ReadNextCommand();
+        ICommand? command = ReadNextCommand();
         while (command != null)
         {
             yield return command;
@@ -83,10 +83,10 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerator<Command> GetAsyncEnumerator(
+    public async IAsyncEnumerator<ICommand> GetAsyncEnumerator(
         CancellationToken cancellationToken = default)
     {
-        Command? command = await ReadNextCommandAsync();
+        ICommand? command = await ReadNextCommandAsync();
         while (command != null)
         {
             yield return command;
@@ -128,9 +128,9 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
     }
 
 
-    private Command ReadLine(string line)
+    private ICommand ReadLine(string line)
     {
-        if (EvaluateCustomCommandGenerators(line, out Command? customCommand))
+        if (EvaluateCustomCommandGenerators(line, out ICommand? customCommand))
             return customCommand;
 
         if (LinearMoveCommand.IsCommand(line, gcodeFlavor))
@@ -151,7 +151,7 @@ public class GCodeStreamReader(Stream inputStream, GCodeFlavor gcodeFlavor = GCo
         return new UnrecognizedCommand(line, gcodeFlavor);
     }
 
-    private bool EvaluateCustomCommandGenerators(string gcodeLine, [NotNullWhen(true)] out Command? command)
+    private bool EvaluateCustomCommandGenerators(string gcodeLine, [NotNullWhen(true)] out ICommand? command)
     {
         foreach (var customCommandGenerator in _customCommandGenerators)
         {

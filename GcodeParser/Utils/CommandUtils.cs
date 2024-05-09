@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.Contracts;
 using GCodeParser;
+using GcodeParser.Utils;
 
 namespace GcodeParser.Commands;
 
@@ -99,7 +100,126 @@ public static class CommandUtils
             if (!arguments.TryAdd(argumentName, argumentValue))
                 throw new DuplicateArgumentException($"Duplicate argument {argumentName}, in command {command}");
         }
+        
+        return arguments;
+    }
+
+    /// <summary>
+    /// Gets all arguments within a <paramref name="command"/> given the <paramref name="gcodeFlavor"/>.
+    /// This is a stack allocated version of GetNumericArgumentsWithoutDuplicates used to reduce stack allocations when parsing Linear Move Commands
+    /// </summary>
+    public static StackAllocDictionary<char, double> GetNumericArgumentsWithoutDuplicatesStackAlloc(
+        ReadOnlySpan<char> command, GCodeFlavor gcodeFlavor, Span<char> argumentsNames, Span<double> argumentsValues)
+    {
+        if(gcodeFlavor != GCodeFlavor.Marlin)
+            throw new InvalidGCode("Unsupported GCodeFlavor");
+
+        StackAllocDictionary<char, double> arguments = new(argumentsNames, argumentsValues);
+
+        bool hasNextToken = TryGetNextToken(command, 0, out ReadOnlySpan<char> token, out int tokenEnd, out bool isArgumentName);
+
+        char argumentName = default;
+        bool isWaitingOnDouble = false;
+        bool isCommandName = true;// ie. G1 or G28
+        
+        while (hasNextToken)
+        {
+            if (isArgumentName && isWaitingOnDouble)
+                throw new Exception($"Expected Argument Name got <{token}>.");
+
+            if (!isArgumentName && !isWaitingOnDouble)
+                throw new Exception($"Expected Number got <{token}>.");
+            
+            
+            if (isArgumentName && !isWaitingOnDouble)
+            {
+                if (token.Length != 1)
+                    throw new Exception($"Argument Name <{token}> cannot have multiple chars");
+
+                argumentName = token[0];
+                isWaitingOnDouble = true;
+            }
+
+            if (!isArgumentName && isWaitingOnDouble)
+            {
+                isWaitingOnDouble = false;
+
+                if (!isCommandName)
+                {
+                    if (arguments.TryGet(argumentName, out _))
+                        throw new DuplicateArgumentException($"Duplicate Argument {argumentName} in command {command}");
+                    arguments[argumentName] = double.Parse(token);
+                }
+
+                isCommandName = false;
+            }
+            
+            
+            hasNextToken = TryGetNextToken(command, tokenEnd, out token, out tokenEnd, out isArgumentName);
+        }
 
         return arguments;
+    }
+
+    private static bool TryGetNextToken(ReadOnlySpan<char> command, int startIndex, out ReadOnlySpan<char> token, out int tokenEnd, out bool isArgumentName)
+    {
+        bool parsingWord = false;
+        bool parsingDouble = false;
+        int tokenStart = -1;
+        int tokenLength = 0;
+        
+        for (int i = startIndex; i < command.Length; i++)
+        {
+            char character = command[i];
+
+
+            if (character == ' ')
+            {
+                if(tokenStart == -1)
+                    continue;
+                else
+                    break;
+            }
+            
+            if (character == ';')
+                break;
+
+            if (char.IsLetter(character))
+            {
+                if(parsingDouble)
+                    break;
+
+                if (tokenStart == -1)
+                    tokenStart = i;
+
+                parsingWord = true;
+            }
+
+            if (char.IsNumber(character) || character == '.' || character == '-')
+            {
+                if (parsingWord)
+                    break;
+
+                if (tokenStart == -1)
+                    tokenStart = i;
+
+                parsingDouble = true;
+            }
+            
+            tokenLength++;
+        }
+
+        if (tokenStart != -1)
+        {
+            token = command.Slice(tokenStart, tokenLength);
+            tokenEnd = tokenStart + tokenLength;
+            isArgumentName = parsingWord;
+            return true;
+        }
+
+        token = default;
+        tokenEnd = -1;
+        isArgumentName = false;
+        return false;
     }
 }

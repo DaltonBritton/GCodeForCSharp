@@ -35,9 +35,26 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves a command to the output stream.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public void SaveCommand(Command command)
+    public void SaveCommand(ICommand command)
     {
-        string gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor);
+        Span<char> buffer = stackalloc char[500];
+        ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
+
+        command.ApplyToState(PrinterState);
+        
+        if(gcodeLine != string.Empty)
+            _backingStream.WriteLine(gcodeLine);
+    }
+    
+    /// <summary>
+    /// Saves a LinearMoveCommand to the output stream.
+    /// Do to high frequency of linear move commands this method exists to prevent boxing allocations and improve preformace.
+    /// </summary>
+    /// <param name="command">The command to save.</param>
+    public void SaveCommand(LinearMoveCommand command)
+    {
+        Span<char> buffer = stackalloc char[500];
+        ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
 
         command.ApplyToState(PrinterState);
         
@@ -49,9 +66,24 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves a command to the output stream Asynchronously.
     /// </summary>
     /// <param name="command">The command to save.</param>
-    public async ValueTask SaveCommandAsync(Command command)
+    public async ValueTask SaveCommandAsync(ICommand command)
     {
-        string gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor);
+        string gcodeLine = GetGCodeAsString(command);
+        
+        command.ApplyToState(PrinterState);
+        
+        if(gcodeLine != string.Empty)
+            await _backingStream.WriteLineAsync(gcodeLine);
+    }
+    
+    /// <summary>
+    /// Saves a command to the output stream Asynchronously.
+    /// Do to high frequency of linear move commands this method exists to prevent boxing allocations and improve preformace.
+    /// </summary>
+    /// <param name="command">The command to save.</param>
+    public async ValueTask SaveCommandAsync(LinearMoveCommand command)
+    {
+        string gcodeLine = GetGCodeAsString(command);
         
         command.ApplyToState(PrinterState);
         
@@ -63,7 +95,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves all commands within the IEnumerable to the output stream.
     /// </summary>
     /// <param name="commands">A List of commands to save to the output stream</param>
-    public void SaveCommands(IEnumerable<Command> commands)
+    public void SaveCommands(IEnumerable<ICommand> commands)
     {
         foreach (var command in commands)
         {
@@ -75,7 +107,7 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
     /// Saves all commands within the IEnumerable to the output stream Asynchronously.
     /// </summary>
     /// <param name="commands">A List of commands to save to the output stream</param>
-    public async ValueTask SaveCommandsAsync(IEnumerable<Command> commands)
+    public async ValueTask SaveCommandsAsync(IEnumerable<ICommand> commands)
     {
         foreach (var command in commands)
         {
@@ -83,10 +115,10 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
         }
     }
 
-    /// <inheritdoc cref="SaveCommandsAsync(System.Collections.Generic.IEnumerable{GCodeParser.Commands.Command})"/>
-    public async ValueTask SaveCommandsAsync(IAsyncEnumerable<Command> commands)
+    /// <inheritdoc cref="SaveCommandsAsync(System.Collections.Generic.IEnumerable{ICommand})"/>
+    public async ValueTask SaveCommandsAsync(IAsyncEnumerable<ICommand> commands)
     {
-        await foreach (Command command in commands)
+        await foreach (ICommand command in commands)
         {
             await SaveCommandAsync(command);
         }
@@ -123,6 +155,23 @@ public class GCodeStreamWriter : IDisposable, IAsyncDisposable
         GC.SuppressFinalize(this);
     }
 
+    private string GetGCodeAsString(ICommand command)
+    {
+        Span<char> buffer = stackalloc char[500];
+        ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
+
+        return gcodeLine.ToString();
+    }
+    
+    private string GetGCodeAsString(LinearMoveCommand command)
+    {
+        Span<char> buffer = stackalloc char[500];
+        ReadOnlySpan<char> gcodeLine = command.ToGCode(PrinterState, _gcodeFlavor, buffer);
+
+        return gcodeLine.ToString();
+    }
+    
+    
     private void AddWaterMark()
     {
         _backingStream.WriteLine("; GCode Generated/Modified by GCodeForCSharp");

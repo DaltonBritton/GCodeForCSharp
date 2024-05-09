@@ -3,15 +3,18 @@ using GcodeParser;
 
 namespace GCodeParser.Commands;
 
-public partial class EmptyCommand(string command = "") : Command(command, GCodeFlavor.Marlin)
+public partial struct EmptyCommand(string command = "") : ICommand
 {
+    
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gcodeFlavor, Span<char> buffer)
     {
-        return AddInlineComment("", gcodeFlavor);
+        ReadOnlySpan<char> InlineComment = ICommand.GetInlineComment(command, GCodeFlavor.Marlin);
+        
+        return $";{InlineComment}";
     }
 
-    public static bool IsCommand(string line, GCodeFlavor gcodeFlavor)
+    public static bool IsCommand(ReadOnlySpan<char> line, GCodeFlavor gcodeFlavor)
     {
         return gcodeFlavor switch
         {
@@ -21,7 +24,7 @@ public partial class EmptyCommand(string command = "") : Command(command, GCodeF
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState state)
+    public void ApplyToState(PrinterState state)
     {
     }
 

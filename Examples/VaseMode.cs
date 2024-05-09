@@ -18,7 +18,7 @@ public static class VaseMode
         
         Vector2 offset = new Vector2(radius+textureAmplitude, radius+textureAmplitude) * 1.25f;
 
-        List<Command> commands =
+        List<ICommand> commands =
         [
             new UnrecognizedCommand($"M104 S{printTemp}", GCodeFlavor.Marlin),
             new UnrecognizedCommand("G28", GCodeFlavor.Marlin),

@@ -1,15 +1,18 @@
 ﻿using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using GcodeParser;
 using GcodeParser.Commands;
+using GcodeParser.Utils;
 
 namespace GCodeParser.Commands;
 
 /// <summary>
 /// Moves the print head to a the given location. Represents the command G0, G1
 /// </summary>
-public partial class LinearMoveCommand : Command
+public partial struct LinearMoveCommand : ICommand
 {
     public double? E { get; private set; }
     public double? F { get; private set; }
@@ -17,13 +20,15 @@ public partial class LinearMoveCommand : Command
     public double? Y { get; private set; }
     public double? Z { get; private set; }
 
+    private string _inlineComment = string.Empty;
+
     /// <summary>
     /// Creates a new Linear Move Command from the GCode representation of the command.
     /// </summary>
     /// <param name="command">The String Representation of a linear move command. (ex. G0, G1)</param>
     /// <param name="gcodeFlavor">Dictates the syntax which to read the command with.</param>
     /// <exception cref="InvalidGCode">Thrown if an unsupported gcodeFlavor is provided.</exception>
-    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
+    public LinearMoveCommand(string command, GCodeFlavor gcodeFlavor)
     {
         switch (gcodeFlavor)
         {
@@ -49,20 +54,19 @@ public partial class LinearMoveCommand : Command
     }
 
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gcodeFlavor, Span<char> buffer)
     {
         if (gcodeFlavor != GCodeFlavor.Marlin)
             throw new InvalidGCode($"Unsupported gcode flavor {gcodeFlavor}");
-
-
+        
+        StringBuilderStackAlloc builder = new(buffer);
+        
         string gcode = GetCommandCodeFromPrinterState(state);
-
-        StringBuilder builder = new(gcode);
-
-        WriteArgumentToGCode(builder, "X", X, state.X, state.AbsMode);
-        WriteArgumentToGCode(builder, "Y", Y, state.Y, state.AbsMode);
-        WriteArgumentToGCode(builder, "Z", Z, state.Z, state.AbsMode);
-        WriteArgumentToGCode(builder, "F", F, state.F, true);
+        builder.Append(gcode);
+        WriteArgumentToGCode(ref builder, "X", X, state.X, state.AbsMode);
+        WriteArgumentToGCode(ref builder, "Y", Y, state.Y, state.AbsMode);
+        WriteArgumentToGCode(ref builder, "Z", Z, state.Z, state.AbsMode);
+        WriteArgumentToGCode(ref builder, "F", F, state.F, true);
 
         if (E != null)
         {
@@ -71,13 +75,29 @@ public partial class LinearMoveCommand : Command
                 builder.Append($" E{extruderMovement}");
         }
 
-        string commandString = builder.ToString();
-        if (commandString == "G0")
-            return string.Empty;
 
-        commandString = AddInlineComment(commandString, gcodeFlavor);
+        builder.Append(_inlineComment);
+        
+        ReadOnlySpan<char> commandString = builder.GetReadOnlySpan();
+        if (commandString == "G0")
+            return ReadOnlySpan<char>.Empty;
 
         return commandString;
+    }
+
+
+    /// <inheritdoc cref="PrinterState.GetPrinterPosAfterMovement"/>
+    [Pure]
+    public Vector3 GetResultingPos(PrinterState state)
+    {
+        return state.GetPrinterPosAfterMovement(X, Y, Z);
+    }
+    
+    /// <inheritdoc cref="PrinterState.GetExtruderPosAfterMovement"/>
+    [Pure]
+    public double GetResultingExtruderPos(PrinterState state)
+    {
+        return state.GetExtruderPosAfterMovement(E);
     }
 
     [Pure]
@@ -109,7 +129,7 @@ public partial class LinearMoveCommand : Command
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState printerState)
+    public void ApplyToState(PrinterState printerState)
     {
         if (X != null)
             printerState.X = (double) X;
@@ -145,30 +165,50 @@ public partial class LinearMoveCommand : Command
         };
     }
 
-    private void ParseMarlin(string command)
+    private void ParseMarlin(ReadOnlySpan<char> command)
     {
-        Dictionary<string, double> arguments =
-            CommandUtils.GetNumericArgumentsWithoutDuplicates(command, GCodeFlavor.Marlin);
+        Span<char> argumentNames = stackalloc char[5];
+        Span<double> argumentValues = stackalloc double[5];
+        
+        StackAllocDictionary<char, double> arguments =
+            CommandUtils.GetNumericArgumentsWithoutDuplicatesStackAlloc(command, GCodeFlavor.Marlin, argumentNames, argumentValues);
 
-        if (arguments.Remove("X", out var argumentValue))
+        int numArguments = 0;
+        
+        if (arguments.TryGet('X', out var argumentValue))
+        {
             X = argumentValue;
-        if (arguments.Remove("Y", out argumentValue))
+            numArguments++;
+        }
+        if (arguments.TryGet('Y', out argumentValue))
+        {
             Y = argumentValue;
-        if (arguments.Remove("Z", out argumentValue))
+            numArguments++;
+        }
+        if (arguments.TryGet('Z', out argumentValue))
+        {
             Z = argumentValue;
-        if (arguments.Remove("E", out argumentValue))
+            numArguments++;
+        }
+        if (arguments.TryGet('E', out argumentValue))
+        {
             E = argumentValue;
-        if (arguments.Remove("F", out argumentValue))
+            numArguments++;
+        }
+        if (arguments.TryGet('F', out argumentValue))
+        {
             F = argumentValue;
+            numArguments++;
+        }
 
-        if (arguments.Count != 0)
+        if (arguments.Count != numArguments)
             throw new InvalidGCode($"Unexpected Arguments in {command}");
     }
 
     [GeneratedRegex("^G[01]")]
     private static partial Regex MarlinLinearMoveCommand();
 
-    private static void WriteArgumentToGCode(StringBuilder builder, string argumentName, double? argumentValue,
+    private static void WriteArgumentToGCode(ref StringBuilderStackAlloc builder, ReadOnlySpan<char> argumentName, double? argumentValue,
         double printerAxisState, bool isAbs)
     {
         if (argumentValue == null)
@@ -177,10 +217,14 @@ public partial class LinearMoveCommand : Command
         switch (isAbs)
         {
             case true when !ApproxEqual((double)argumentValue, printerAxisState):
-                builder.Append($" {argumentName}{argumentValue}");
+                builder.Append(" ");
+                builder.Append(argumentName);
+                builder.Append(argumentValue.ToString());
                 break;
             case false when !ApproxEqual((double)argumentValue, 0):
-                builder.Append($" {argumentName}{printerAxisState + argumentValue}");
+                builder.Append(" ");
+                builder.Append(argumentName);
+                builder.Append((printerAxisState + argumentValue).ToString());
                 break;
         }
     }

@@ -9,9 +9,11 @@ namespace GcodeParser.Commands;
 /// Command for setting axes to Auto Home. 
 /// Does not support [L] [O] or [R] parameters
 /// </summary>
-public sealed partial class AutoHomeCommand : Command
+public partial struct AutoHomeCommand : ICommand
 {
     private readonly Dictionary<Axis, bool> _axes = new();
+
+    private readonly string _inlineComment = string.Empty;
 
     /// <summary>
     /// Constructor for generating an Auto Home command for all axes
@@ -54,6 +56,7 @@ public sealed partial class AutoHomeCommand : Command
     public AutoHomeCommand(Axis axis)
     {
         _axes[axis] = true;
+        _inlineComment = "";
     }
 
     /// <summary>
@@ -62,16 +65,20 @@ public sealed partial class AutoHomeCommand : Command
     /// <param name="command"></param>
     /// <param name="gcodeFlavor"></param>
     /// <exception cref="InvalidGCode"></exception>
-    public AutoHomeCommand(string command, GCodeFlavor gcodeFlavor) : base(command, gcodeFlavor)
+    public AutoHomeCommand(ReadOnlySpan<char> command, GCodeFlavor gcodeFlavor)
     {
         if (GCodeFlavor.Marlin != gcodeFlavor) throw new InvalidGCode($"Unsupported GCode flavor {gcodeFlavor}");
 
-        if (!AutoHomeRegex().IsMatch(RawCommand))
+        ReadOnlySpan<char> rawCommand = ICommand.GetRawCommand(command, gcodeFlavor);
+
+        _inlineComment = ICommand.GetInlineComment(command, gcodeFlavor).ToString();
+        
+        if (!AutoHomeRegex().IsMatch(rawCommand))
         {
             throw new InvalidGCode($"Invalid Auto Home Command {command}");
         }
 
-        HashSet<string> arguments = CommandUtils.GetBooleanArgumentsWithoutDuplicates(RawCommand, gcodeFlavor);
+        HashSet<string> arguments = CommandUtils.GetBooleanArgumentsWithoutDuplicates(rawCommand.ToString(), gcodeFlavor);
         
         
         if (arguments.Contains("L") || arguments.Contains("O") || arguments.Contains("R"))
@@ -92,7 +99,7 @@ public sealed partial class AutoHomeCommand : Command
     }
 
     /// <inheritdoc/>
-    public override string ToGCode(PrinterState state, GCodeFlavor gcodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gcodeFlavor, Span<char> buffer)
     {
         StringBuilder builder = new StringBuilder("G28");
 
@@ -102,13 +109,20 @@ public sealed partial class AutoHomeCommand : Command
                 builder.Append($" {axis}");
         }
 
+        // Add comment
+        if(_inlineComment != string.Empty)
+        {
+            builder.Append(';');
+            builder.Append(_inlineComment);
+        }
+        
         string command = builder.ToString();
 
-        return AddInlineComment(command, gcodeFlavor);
+        return command;
     }
 
     /// <inheritdoc/>
-    public override void ApplyToState(PrinterState state)
+    public void ApplyToState(PrinterState state)
     {
         if (_axes.TryGetValue(Axis.X, out bool isHomed))
             state.XHome = isHomed;

@@ -3,14 +3,13 @@
 /// <summary>
 /// Creates a Unrecognized command
 /// </summary>
-public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Command(command, gcodeFlavor)
+public struct UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : ICommand
 {
-    private readonly string _command = command;
-
+    
     /// <inheritdoc />
-    public override string ToGCode(PrinterState state, GCodeFlavor gCodeFlavor)
+    public ReadOnlySpan<char> ToGCode(PrinterState state, GCodeFlavor gCodeFlavor, Span<char> buffer)
     {
-        return _command;
+        return command;
     }
     
     /// <inheritdoc cref="ToGCode(GCodeParser.PrinterState,GCodeParser.GCodeFlavor)"/>
@@ -20,7 +19,5 @@ public class UnrecognizedCommand(string command, GCodeFlavor gcodeFlavor) : Comm
     }
 
     /// <inheritdoc />
-    public override void ApplyToState(PrinterState state)
-    {
-    }
+    public void ApplyToState(PrinterState state) { }
 }
