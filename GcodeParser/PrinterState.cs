@@ -152,7 +152,7 @@ public class PrinterState
         if(newExtruderPos != null)
             SetAxis((double) newExtruderPos, ref e, _absExtruderMode);
 
-        return e;
+        return e - _e;
     }
     
     /// <summary>

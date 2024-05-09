@@ -1,4 +1,5 @@
-﻿using GcodeParser;
+﻿using System.Numerics;
+using GcodeParser;
 using GCodeParser;
 using GCodeParser.Commands;
 
@@ -178,5 +179,95 @@ public class LinearMoveTests
         await using Stream inputStream = new MemoryStream("G0 A10"u8.ToArray());
         await using GCodeStreamReader gcodeStream = new GCodeStreamReader(inputStream);
         await gcodeStream.ReadNextCommandAsync();
+    }
+
+    [TestMethod]
+    public void TestGetResultingPosAbs()
+    {
+        GCodeStreamWriter gcodeStreamWriter = new GCodeStreamWriter(Stream.Null);
+
+        LinearMoveCommand command1 = new(x: 10, y: 20, z: 30);
+        Vector3 result1 = command1.GetResultingPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(new(x: 10, y: 20, z: 30), result1);
+        gcodeStreamWriter.SaveCommand(command1);
+
+        LinearMoveCommand command2 = new(x: 40, y: 50, z: 60);
+        Vector3 result2 = command2.GetResultingPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(new(x: 40, y: 50, z: 60), result2);
+    }
+    
+    [TestMethod]
+    public void TestGetResultingPosRel()
+    {
+        GCodeStreamWriter gcodeStreamWriter = new GCodeStreamWriter(Stream.Null);
+        gcodeStreamWriter.SaveCommand(new AbsMovementMode(false));
+
+        LinearMoveCommand command1 = new(x: 10, y: 20, z: 30);
+        Vector3 result1 = command1.GetResultingPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(new(x: 10, y: 20, z: 30), result1);
+        gcodeStreamWriter.SaveCommand(command1);
+
+        LinearMoveCommand command2 = new(x: 40, y: 50, z: 60);
+        Vector3 result2 = command2.GetResultingPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(new(x: 50, y: 70, z: 90), result2);
+    }
+    
+    [TestMethod]
+    public void TestGetResultingExtruderMovementAbs()
+    {
+        using GCodeStreamWriter gcodeStreamWriter = new GCodeStreamWriter(Stream.Null);
+        gcodeStreamWriter.SaveCommand(new AbsMovementMode(true, true));
+
+        LinearMoveCommand command1 = new(e: 10);
+        double result1 = command1.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(10,result1);
+        gcodeStreamWriter.SaveCommand(command1);
+
+        LinearMoveCommand command2 = new(e: 20);
+        double result2 = command2.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+
+        
+        Assert.AreEqual(10,result2);
+    }
+    
+    [TestMethod]
+    public void TestGetResultingExtruderMovementRel()
+    {
+        using GCodeStreamWriter gcodeStreamWriter = new GCodeStreamWriter(Stream.Null);
+
+        LinearMoveCommand command1 = new(e: 10);
+        double result1 = command1.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(10, result1);
+        gcodeStreamWriter.SaveCommand(command1);
+
+        LinearMoveCommand command2 = new(e: 20);
+        double result2 = command2.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+
+        
+        Assert.AreEqual(20, result2);
+    }
+    
+    [TestMethod]
+    public void TestGetResultingExtruderMovementNoMovement()
+    {
+        using GCodeStreamWriter gcodeStreamWriter = new GCodeStreamWriter(Stream.Null);
+
+        LinearMoveCommand command1 = new(e: 10);
+        double result1 = command1.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+        
+        Assert.AreEqual(10, result1);
+        gcodeStreamWriter.SaveCommand(command1);
+
+        LinearMoveCommand command2 = new(x: 20, y: 100);
+        double result2 = command2.GetResultingExtruderPos(gcodeStreamWriter.PrinterState);
+
+        
+        Assert.AreEqual(0, result2);
     }
 }
